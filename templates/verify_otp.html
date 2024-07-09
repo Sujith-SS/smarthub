@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+{% block title %}Home | Smarthub{% endblock %}
+
+{% block main_content %}
+<div class="container" style="margin-top: 11em; margin-bottom: 6em;">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Verify OTP</h2>
+                    <form method="post" action="{% url 'verify_otp' %}">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label for="otp">Enter OTP</label>
+                            <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP" required>
+                            {% if form.otp.errors %}
+                                <small class="text-danger">{{ form.otp.errors }}</small>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Verify OTP</button>
+                    </form>
+                    <hr>
+                    <p class="text-center">Didn't receive OTP? <a href="{% url 'resend_otp' %}">Resend OTP</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if otp_verified %}
+<script>
+    Swal.fire({
+        title: 'Success!',
+        text: 'You have successfully logged in.',
+        icon: 'success',
+        confirmButtonText: 'OK'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = "{% url 'verify_otp' %}";
+        }
+    });
+</script>
+{% endif %}
+
+{% endblock %}
+
+
