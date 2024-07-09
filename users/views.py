@@ -8,6 +8,9 @@ from .forms import SignUpForm, OTPForm, LoginForm
 from django.contrib.auth.models import User
 from datetime import timedelta
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import logout
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 
 
@@ -28,7 +31,7 @@ def signup(request):
                 'email': form.cleaned_data.get('email')
             }
             otp = generate_otp()
-            expires_at = timezone.now() + timedelta(minutes=5)  # OTP expires in 5 minutes
+            expires_at = timezone.now() + timedelta(minutes=5) 
             request.session['otp'] = otp
             request.session['otp_expires_at'] = expires_at.isoformat()
             try:
@@ -110,3 +113,15 @@ def login_view(request):
     else:
         form = LoginForm()
     return render(request, 'account.html', {'form': form})
+
+
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect(reverse('login'))
+
+
+
+
+

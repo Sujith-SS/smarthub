@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -187,11 +186,6 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
 ACCOUNT_ADAPTER = 'users.adapters.MyAccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'users.adapters.MySocialAccountAdapter'
-
-
-
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 
 

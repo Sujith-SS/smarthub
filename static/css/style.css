@@ -401,6 +401,7 @@ th:last-child{
     margin: auto;
     box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    border-radius: 4%;
 }
 .form-container span{
     font-weight: bold;
@@ -481,6 +482,22 @@ form a{
         cursor: pointer;
     }
 }
+
+
+#google-btn {
+    text-decoration: none; /* Removes underline */
+    color: inherit; /* Inherits text color from parent */
+    display: inline-block; /* Makes it behave like a block element but inline with content */
+    padding: 5px; /* Optional padding */
+    
+}
+
+#google-btn img {
+    vertical-align: middle; /* Aligns the icon vertically with text */
+    width: 20px;
+}
+
+
 
 /* Media query for 600 screen size */
 @media only screen and (max-width: 600px){
