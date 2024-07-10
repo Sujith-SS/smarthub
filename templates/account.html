@@ -62,7 +62,7 @@
                             {{ form.password.errors }}
                             <input type="password" name="password" placeholder="Password" required>
                             <button type="submit" class="btn">Login</button>
-                            <a href="#">Forgot Password</a>
+                            <a href="{% url 'password_reset_request' %}">Forgot Password</a>
                             <!-- Google Sign-in -->
                             <div style="margin-top: 10px;">
                                 <p style="cursor: pointer;" onclick="window.location.href='{% provider_login_url 'google' %}'">
@@ -96,6 +96,10 @@
             </div> 
         </div>
     </div>
+
+
+
+
 
 
     <!-- Footer -->
@@ -172,6 +176,9 @@
 
         }
     </script>
+
+
+    
 
 </body>
 

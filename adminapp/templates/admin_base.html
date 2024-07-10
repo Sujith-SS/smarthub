@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-orange': '#FF6600',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between">
+                <div class="flex space-x-7">
+                    <div>
+                        <a href="#" class="flex items-center py-4 px-2">
+                            <span class="font-semibold text-gray-500 text-lg">Admin Panel</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="#" class="py-2 px-2 font-medium text-gray-500 rounded hover:bg-custom-orange hover:text-white transition duration-300">Log Out</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <aside class="w-64 bg-white shadow-md h-screen">
+            <div class="p-4">
+                <ul class="space-y-2">
+                    <li><a href="admin-dashboard.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Dashboard</a></li>
+                    <li><a href="user-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">User Management</a></li>
+                    <li><a href="category-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Category Management</a></li>
+                    <li><a href="product-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Product Management</a></li>
+                    <li><a href="order-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Order Management</a></li>
+                    <li><a href="sales-reports.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Sales Reports</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-8">
+            <!-- Content goes here -->
+        </main>
+    </div>
+</body>
+</html>
