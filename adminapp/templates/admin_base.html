@@ -1,10 +1,14 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -20,16 +24,27 @@
 <body class="bg-gray-100">
     <nav class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between">
+            <div class="flex justify-between items-center">
                 <div class="flex space-x-7">
                     <div>
                         <a href="#" class="flex items-center py-4 px-2">
-                            <span class="font-semibold text-gray-500 text-lg">Admin Panel</span>
+                            <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-auto mr-2" style="width: 7rem; margin: 0rem 2rem 0rem -6rem;">
+                            <span class="font-bold text-orange-500 text-2xl">
+                                <span class="text-3xl">A</span>dmin Panel
+                            </span>
                         </a>
                     </div>
                 </div>
+                <div class="flex-1 max-w-xl mx-4">
+                    <form class="relative">
+                        <input type="text" placeholder="Search..." class="w-full py-2 px-4 border border-orange-500 rounded-full  focus:outline-none focus:ring-2 focus:ring-custom-orange">
+                        <button type="submit" class="absolute right-0 top-0 mt-2 mr-4">
+                            <i class="fas fa-search text-orange-400"></i>
+                        </button>
+                    </form>
+                </div>
                 <div class="flex items-center space-x-3">
-                    <a href="#" class="py-2 px-2 font-medium text-gray-500 rounded hover:bg-custom-orange hover:text-white transition duration-300">Log Out</a>
+                    <a href="{% url 'admin_logout' %}" class="py-2 px-2 font-medium text-white bg-custom-orange rounded hover:bg-custom-orange hover:text-white transition duration-300">Log Out</a>
                 </div>
             </div>
         </div>
@@ -39,18 +54,30 @@
         <aside class="w-64 bg-white shadow-md h-screen">
             <div class="p-4">
                 <ul class="space-y-2">
-                    <li><a href="admin-dashboard.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Dashboard</a></li>
-                    <li><a href="user-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">User Management</a></li>
-                    <li><a href="category-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Category Management</a></li>
-                    <li><a href="product-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Product Management</a></li>
-                    <li><a href="order-management.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Order Management</a></li>
-                    <li><a href="sales-reports.html" class="block py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">Sales Reports</a></li>
+                    <li><a href="admin-dashboard.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                        <i class="fas fa-tachometer-alt text-orange-500"></i>  Dashboard
+                    </a></li>
+                    <li><a href="user-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                        <i class="fas fa-users mr-3 text-orange-500"></i> User Management
+                    </a></li>
+                    <li><a href="category-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                        <i class="fas fa-list mr-3 text-orange-500"></i> Category Management
+                    </a></li>
+                    <li><a href="product-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                        <i class="fas fa-box mr-3 text-orange-500"></i> Product Management
+                    </a></li>
+                    <li><a href="order-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                        <i class="fas fa-shopping-cart mr-3 text-orange-500"></i> Order Management
+                    </a></li>
+                    <li><a href="sales-reports.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                        <i class="fas fa-chart-bar mr-3 text-orange-500"></i> Sales Reports
+                    </a></li>
                 </ul>
             </div>
         </aside>
 
         <main class="flex-1 p-8">
-            <!-- Content goes here -->
+            {% block content %}{% endblock %}
         </main>
     </div>
 </body>

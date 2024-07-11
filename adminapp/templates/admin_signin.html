@@ -21,25 +21,35 @@
     <div class="flex items-center justify-center min-h-screen">
         <div class="bg-white p-8 rounded-lg shadow-md w-96">
             <h2 class="text-2xl font-bold mb-6 text-center text-custom-orange">Admin Sign In</h2>
-            <form>
+            <form method="post" action="{% url 'admin_login' %}">
+                {% csrf_token %}
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-                        Email
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="username">
+                        Username
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="email" type="email" placeholder="Email">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" name="username" type="username" placeholder="Username">
                 </div>
                 <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
                         Password
                     </label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" id="password" type="password" placeholder="******************">
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" id="password" name="password" type="password" placeholder="Enter your password">
                 </div>
                 <div class="flex items-center justify-between">
-                    <button class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button">
-                        Sign In
+                    <button class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                        Login
                     </button>
                 </div>
             </form>
+
+            {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                    <div class="bg-red-100 text-red-700 p-2 rounded mb-2">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         </div>
     </div>
 </body>
