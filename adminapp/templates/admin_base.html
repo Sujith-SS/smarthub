@@ -11,6 +11,7 @@
     <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -20,30 +21,38 @@
             }
         }
     </script>
+    <style>
+        h1, h2, h3, h4, h5, h6 {
+            color: #FF6600; /* custom-orange color */
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-white shadow-lg">
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <nav class="bg-white dark:bg-gray-800 shadow-lg">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center">
                 <div class="flex space-x-7">
                     <div>
                         <a href="#" class="flex items-center py-4 px-2">
                             <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-auto mr-2" style="width: 7rem; margin: 0rem 2rem 0rem -6rem;">
-                            <span class="font-bold text-orange-500 text-2xl">
+                            <span class="font-bold text-orange-500 dark:text-orange-400 text-2xl">
                                 <span class="text-3xl">A</span>dmin Panel
                             </span>
                         </a>
                     </div>
                 </div>
                 <div class="flex-1 max-w-xl mx-4">
-                    <form class="relative" method='get' >
-                        <input type="text" placeholder="Search..." class="w-full py-2 px-4 border border-orange-500 rounded-full  focus:outline-none focus:ring-2 focus:ring-custom-orange" name="search">
+                    <form class="relative" method='get'>
+                        <input type="text" placeholder="Search..." class="w-full py-2 px-4 border border-orange-500 rounded-full focus:outline-none focus:ring-2 focus:ring-custom-orange dark:bg-gray-700 dark:text-white" name="search">
                         <button type="submit" class="absolute right-0 top-0 mt-2 mr-4">
                             <i class="fas fa-search text-orange-400"></i>
                         </button>
                     </form>
                 </div>
                 <div class="flex items-center space-x-3">
+                    <button id="darkModeToggle" class="py-2 px-2 font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition duration-300">
+                        <i class="fas fa-moon"></i>
+                    </button>
                     <a href="{% url 'admin_logout' %}" class="py-2 px-2 font-medium text-white bg-custom-orange rounded hover:bg-custom-orange hover:text-white transition duration-300">Log Out</a>
                 </div>
             </div>
@@ -51,25 +60,25 @@
     </nav>
 
     <div class="flex">
-        <aside class="w-64 bg-white shadow-md h-screen">
+        <aside class="w-64 bg-white dark:bg-gray-800 shadow-md h-screen">
             <div class="p-4">
-                <ul class="space-y-2">
-                    <li><a href="{% url 'administration'%}" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                <ul class="space-y-2 ">
+                    <li><a href="{% url 'administration'%}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-tachometer-alt text-orange-500"></i>  Dashboard
                     </a></li>
-                    <li><a href="{% url 'admin_user_list'%}" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="{% url 'admin_user_list'%}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-users mr-3 text-orange-500"></i> User Management
                     </a></li>
-                    <li><a href="category-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="{% url 'list_categories'%}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-list mr-3 text-orange-500"></i> Category Management
                     </a></li>
-                    <li><a href="product-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="product-management.html" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-box mr-3 text-orange-500"></i> Product Management
                     </a></li>
-                    <li><a href="order-management.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="order-management.html" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-shopping-cart mr-3 text-orange-500"></i> Order Management
                     </a></li>
-                    <li><a href="sales-reports.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="sales-reports.html" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-chart-bar mr-3 text-orange-500"></i> Sales Reports
                     </a></li>
                 </ul>
@@ -80,5 +89,26 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const html = document.documentElement;
+
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            html.classList.add('dark');
+        }
+
+        darkModeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            
+            // Save dark mode preference
+            if (html.classList.contains('dark')) {
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                localStorage.setItem('darkMode', null);
+            }
+        });
+    </script>
 </body>
-</html>
+</html> 

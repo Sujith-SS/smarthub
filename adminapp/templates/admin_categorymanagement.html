@@ -3,7 +3,7 @@
 {% block content %}
 <main class="flex-1 p-8">
     <h1 class="text-2xl font-semibold mb-6">Category Management</h1>
-    <button class="mb-4 bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+    <button id="addCategoryBtn" class="mb-4 bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
         Add New Category
     </button>
     <div class="bg-white shadow-md rounded-lg overflow-x-auto">
@@ -14,7 +14,10 @@
                         Category Name
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Description
+                        Added Date
+                    </th>
+                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Updated Date
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Actions
@@ -22,21 +25,137 @@
                 </tr>
             </thead>
             <tbody>
+                {% for category in categories %}
                 <tr>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        Electronics
+                        {{ category.name }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        Electronic devices and accessories
+                        {{ category.created_at|date:"F d, Y H:i" }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <button class="text-blue-600 hover:text-blue-900">Edit</button>
-                        <button class="ml-2 text-red-600 hover:text-red-900">Delete</button>
+                        {{ category.updated_at|date:"F d, Y H:i" }}
+                    </td>
+                    <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm" >
+                        <button class="editCategoryBtn bg-teal-500 text-white hover:bg-teal-700 hover:text-white py-2 px-4 rounded" data-id="{{ category.id }}" data-name="{{ category.name }}">Edit</button>
+                        <button class="deleteCategoryBtn ml-2 bg-red-600 text-white hover:bg-red-800 hover:text-white py-2 px-4 rounded" data-id="{{ category.id }}">Delete</button>
+
+                        
+
                     </td>
                 </tr>
-                <!-- Add more rows as needed -->
+                {% endfor %}
             </tbody>
         </table>
     </div>
 </main>
+
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+        <h2 class="text-2xl font-bold mb-4">Add New Category</h2>
+        <form id="addCategoryForm" method="POST" action="{% url 'add_category' %}">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                <input type="text" id="name" name="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add Category</button>
+                <button type="button" class="closeModal bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+        <h2 class="text-2xl font-bold mb-4">Edit Category</h2>
+        <form id="editCategoryForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" id="editCategoryId" name="id">
+            <div class="mb-4">
+                <label for="editName" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                <input type="text" id="editName" name="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Update Category</button>
+                <button type="button" class="closeModal bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Category Modal -->
+<div id="deleteCategoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+        <h2 class="text-2xl font-bold mb-4">Delete Category</h2>
+        <p class="mb-4">Are you sure you want to delete this category?</p>
+        <form id="deleteCategoryForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" id="deleteCategoryId" name="id">
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Delete</button>
+                <button type="button" class="closeModal bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        const addCategoryModal = document.getElementById('addCategoryModal');
+        const editCategoryModal = document.getElementById('editCategoryModal');
+        const deleteCategoryModal = document.getElementById('deleteCategoryModal');
+        const closeModalBtns = document.querySelectorAll('.closeModal');
+        const editCategoryBtns = document.querySelectorAll('.editCategoryBtn');
+        const deleteCategoryBtns = document.querySelectorAll('.deleteCategoryBtn');
+
+        function showModal(modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideModal(modal) {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        addCategoryBtn.addEventListener('click', () => showModal(addCategoryModal));
+
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hideModal(addCategoryModal);
+                hideModal(editCategoryModal);
+                hideModal(deleteCategoryModal);
+            });
+        });
+
+        editCategoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const name = btn.getAttribute('data-name');
+
+                document.getElementById('editCategoryId').value = id;
+                document.getElementById('editName').value = name;
+                document.getElementById('editCategoryForm').action = `/edit_category/${id}/`;
+
+                showModal(editCategoryModal);
+            });
+        });
+
+        deleteCategoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                document.getElementById('deleteCategoryId').value = id;
+                document.getElementById('deleteCategoryForm').action = `/delete_category/${id}/`;
+
+                showModal(deleteCategoryModal);
+            });
+        });
+    });
+</script>
+
 {% endblock %}

@@ -11,9 +11,14 @@ urlpatterns = [
     path('unblock_user/<int:user_id>/', views.unblock_user, name='unblock_user'),
     
     
+    path('categories/', views.list_categories, name='list_categories'),
+    path('add_category/', views.add_category, name='add_category'),
+    path('edit_category/<int:category_id>/', views.edit_category, name='edit_category'),
+    path('delete_category/<int:category_id>/', views.delete_category, name='delete_category'),
+    
     
     path('productmanagement/',views.admin_productManagement, name='productmanagement'),
-    path('categorymanagement/',views.admin_categoryManagement, name='categorymanagement'),
+    # path('categorymanagement/',views.admin_categoryManagement, name='categorymanagement'),
     path('ordermanagement/',views.admin_orderManagement, name='ordermanagement'),
     path('salesreport/',views.admin_salesRepot, name='salesreport'),
     
