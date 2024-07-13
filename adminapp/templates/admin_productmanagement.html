@@ -4,7 +4,7 @@
 {% block content %}
 <main class="flex-1 p-8">
     <h1 class="text-2xl font-semibold mb-6">Product Management</h1>
-    <button class="mb-4 bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+    <button class="mb-4 bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded" onclick="openModal('addProductModal')">
         Add New Product
     </button>
     <div class="bg-white shadow-md rounded-lg overflow-x-auto">
@@ -29,27 +29,175 @@
                 </tr>
             </thead>
             <tbody>
+                {% for product in products %}
                 <tr>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        Smartphone X
+                        {{ product.name }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        Electronics
+                        {{ product.category.name }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        $699.99
+                        ${{ product.price }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        50
+                        {{ product.stock }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <button class="text-blue-600 hover:text-blue-900">Edit</button>
-                        <button class="ml-2 text-red-600 hover:text-red-900">Delete</button>
+                        <button class="editCategoryBtn bg-teal-500 text-white hover:bg-teal-700 hover:text-white py-2 px-4 rounded" onclick="openModal('editProductModal', {{ product.id }})">Edit</button>
+                        {% if product.is_active %}
+                            <a href="{% url 'product_status' product.id %}" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                                Unist
+                            </a>
+                            {% else %}
+                            <a href="{% url 'product_status' product.id %}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                                List
+                            </a>
+                            {% endif %}
                     </td>
                 </tr>
-                <!-- Add more rows as needed -->
+                {% endfor %}
             </tbody>
         </table>
     </div>
 </main>
+
+<!-- Add New Product Modal -->
+<div id="addProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+        <h3 class="text-lg font-semibold mb-4">Add New Product</h3>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'add_product' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Name</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text" name="name" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="description">Description</label>
+                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="description" name="description" required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="price">Price</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="price" type="number" step="0.01" name="price" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="category">Category</label>
+                        <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="category" name="category" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="stock">Stock</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="stock" type="number" name="stock" required>
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="image">Image</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="images" type="file" name="images" accept="image/*" multiple required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Crop Image</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-64">
+                            <!-- Add image cropping functionality here -->
+                            <p class="text-gray-500">Image cropping area</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between mt-4">
+                <button class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                    Add Product
+                </button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="closeModal('addProductModal')">
+                    Cancel
+                </button>
+            </div>
+        </form>   
+     </div>
+</div>
+
+<!-- Edit Product Modal -->
+{% for product in products %}
+<div id="editProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
+        <h3 class="text-lg font-semibold mb-4">Edit Product</h3>
+        
+        <form method="post" enctype="multipart/form-data" action="{% url 'edit_product' product.id %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-name">Name</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-name" type="text" name="name" value="{{ product.name }}" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-description">Description</label>
+                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-description" name="description" required>{{ product.description }}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-price">Price</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-price" type="number" step="0.01" name="price" value="{{ product.price }}" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-category">Category</label>
+                        <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-category" name="category" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stock">Stock</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-stock" type="number" name="stock" value="{{ product.stock }}" required>
+                    </div>
+                </div>
+                <div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Crop Image</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-64">
+                            <!-- Add image cropping functionality here -->
+                            <p class="text-gray-500">Image cropping area</p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-images">Images</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-images" type="file" name="images" accept="image/*" multiple>
+                        <p class="text-gray-500 mt-2">You can upload multiple images. Existing images will be shown after selecting a file.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between mt-4">
+                <button class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+                    Save Changes
+                </button>
+                <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="button" onclick="closeModal('editProductModal')">
+                    Cancel
+                </button>
+            </div>
+        </form>
+        
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    
+</script>
 {% endblock %}

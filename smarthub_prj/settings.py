@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-     'tailwind',
     'allauth.socialaccount.providers.google',
 ]
 
