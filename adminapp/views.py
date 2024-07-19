@@ -5,10 +5,10 @@ from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.models import User
-from .models import Category,Product
-from .forms import CategoryForm
-from .forms import ProductForm
-
+from .models import Category, Product, ProductImage
+from django.http import JsonResponse
+import logging
+from django.db import transaction
 
 
 def admin_login(request):
@@ -83,6 +83,7 @@ def unblock_user(request, user_id):
 
 #Category management section
 
+# List categories
 @staff_member_required(login_url='admin_login')
 def list_categories(request):
     query = request.GET.get('search')
@@ -92,92 +93,163 @@ def list_categories(request):
         categories = Category.objects.all()
     return render(request, 'admin_categorymanagement.html', {'categories': categories})
 
-
-
+# Add category
 @staff_member_required(login_url='admin_login')
 def add_category(request):
     if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
+        name = request.POST.get('name')
+        if name:
+            Category.objects.create(name=name)
             return redirect('list_categories')
-    else:
-        form = CategoryForm()
-    return render(request, 'admin_categorymanagement.html', {'form': form})
+    categories = Category.objects.all()
+    return render(request, 'admin_categorymanagement.html', {'categories': categories})
 
-
-
+# Edit category
 @staff_member_required(login_url='admin_login')
 def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
-        form = CategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
+        name = request.POST.get('name')
+        if name:
+            category.name = name
+            category.save()
             return redirect('list_categories')
-    else:
-        form = CategoryForm(instance=category)
-    return render(request, 'admin_categorymanagement.html', {'form': form, 'category': category})
+    categories = Category.objects.all()
+    return render(request, 'admin_categorymanagement.html', {'category': category, 'categories': categories})
 
 
-
+# status category
 @staff_member_required(login_url='admin_login')
-def delete_category(request, category_id):
+def toggle_category_status(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
-        category.delete()
-        messages.success(request, 'Category deleted successfully.')
+        category.is_active = not category.is_active
+        category.save()
+        status = 'listed' if category.is_active else 'unlisted'
+        messages.success(request, f'Category {status} successfully.')
         return redirect('list_categories')
-    return render(request, 'admin_categorymanagement.html', {'category': category})
+    categories = Category.objects.all()
+    return render(request, 'admin_categorymanagement.html', {'category': category, 'categories': categories})
 
 
-
-# Product management section
+# List products
 @staff_member_required(login_url='admin_login')
 def list_products(request):
     query = request.GET.get('search')
     if query:
-        products = Product.objects.filter(name__icontains=query, is_active=True)
+        products = Product.objects.filter(name__icontains=query)
     else:
         products = Product.objects.all().order_by('name')
-        categories=Category.objects.all()
-    return render(request, 'admin_productmanagement.html', {'products': products,'categories':categories})
+    categories = Category.objects.filter(is_active=True)
+    return render(request, 'admin_productmanagement.html', {'products': products, 'categories': categories})
 
+# Add product
+
+logger = logging.getLogger(__name__)
 
 @staff_member_required(login_url='admin_login')
 def add_product(request):
     if request.method == 'POST':
-        
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            
-            form.save()
-            messages.success(request, 'Product added successfully.')
-            return redirect('list_products')
-    else:
-        form = ProductForm()
-    return render(request, 'admin_productmanagement.html', {'form': form, 'categories': Category.objects.all()})
+        try:
+            with transaction.atomic():
+                name = request.POST.get('name')
+                description = request.POST.get('description')
+                price = request.POST.get('price')
+                stock = request.POST.get('stock')
+                category_id = request.POST.get('category')
 
+                # Check for missing fields
+                if not all([name, description, price, stock, category_id]):
+                    missing_fields = [field for field in ['name', 'description', 'price', 'stock', 'category'] if not request.POST.get(field)]
+                    error_msg = f"Missing required fields: {', '.join(missing_fields)}"
+                    return JsonResponse({'success': False, 'error': error_msg})
+
+                # Convert and validate price and stock
+                try:
+                    price = float(price)
+                    stock = int(stock)
+                except ValueError:
+                    return JsonResponse({'success': False, 'error': 'Invalid price or stock value.'})
+
+                if price <= 0:
+                    return JsonResponse({'success': False, 'error': 'Price must be positive.'})
+
+                if stock < 0:
+                    return JsonResponse({'success': False, 'error': 'Stock must be non-negative.'})
+
+                # Check if category exists and is active
+                try:
+                    category = Category.objects.get(id=category_id, is_active=True)
+                except Category.DoesNotExist:
+                    error_msg = f"Category with id {category_id} does not exist or is not active"
+                    return JsonResponse({'success': False, 'error': error_msg})
+
+                # Create product
+                product = Product.objects.create(
+                    name=name,
+                    description=description,
+                    price=price,
+                    stock=stock,
+                    category=category
+                )
+
+                # Validate and add images
+                images = request.FILES.getlist('images')
+                if len(images) < 3:
+                    error_msg = f"Not enough images. Received {len(images)}, need at least 3."
+                    raise ValueError(error_msg)
+
+                for image in images:
+                    product_image = ProductImage.objects.create(image=image)
+                    product.images.add(product_image)
+
+                return JsonResponse({'success': True, 'message': 'Product added successfully.'})
+
+        except ValueError as ve:
+            return JsonResponse({'success': False, 'error': str(ve)})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+# Edit product
+@staff_member_required(login_url='admin_login')
+def edit_product(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        product.name = request.POST.get('name')
+        product.description = request.POST.get('description')
+        product.price = request.POST.get('price')
+        product.stock = request.POST.get('stock')
+        category_id = request.POST.get('category')
+        product.category = get_object_or_404(Category, id=category_id, is_active=True)
+        
+        images = request.FILES.getlist('images')
+        if images:
+            if len(images) < 3:
+                messages.error(request, "Please upload at least 3 images.")
+                return redirect('edit_product', product_id=product_id)
+            
+            product.images.all().delete()
+            for image in images:
+                product_image = ProductImage.objects.create(image=image)
+                product.images.add(product_image)
+        
+        product.save()
+        messages.success(request, "Product updated successfully.")
+        return redirect('list_products')
+    
+    categories = Category.objects.filter(is_active=True)
+    return render(request, 'admin_productmanagement.html', {'product': product, 'categories': categories})
+
+# Toggle product status
 @staff_member_required(login_url='admin_login')
 def product_status(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     product.is_active = not product.is_active
     product.save()
     return redirect('list_products')
-    
-        
-@staff_member_required(login_url='admin_login')    
-def edit_product(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect('list_products')
-    else:
-        form = ProductForm(instance=product)
-    return render(request, 'admin_productmanagement.html', {'form': form, 'product': product})
-
 
 
 

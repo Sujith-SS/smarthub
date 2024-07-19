@@ -2,6 +2,7 @@
 {% block title %}Product Management{% endblock %}
 
 {% block content %}
+{% load static %}
 <main class="flex-1 p-8">
     <h1 class="text-2xl font-semibold mb-6">Product Management</h1>
     <button class="mb-4 bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded" onclick="openModal('addProductModal')">
@@ -44,16 +45,16 @@
                         {{ product.stock }}
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <button class="editCategoryBtn bg-teal-500 text-white hover:bg-teal-700 hover:text-white py-2 px-4 rounded" onclick="openModal('editProductModal', {{ product.id }})">Edit</button>
+                        <button class="bg-teal-500 text-white hover:bg-teal-700 hover:text-white py-2 px-4 rounded" onclick="openEditModal({{ product.id }}, '{{ product.name }}', '{{ product.description }}', {{ product.price }}, {{ product.stock }}, {{ product.category.id }})">Edit</button>
                         {% if product.is_active %}
                             <a href="{% url 'product_status' product.id %}" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
-                                Unist
+                                Unlist
                             </a>
-                            {% else %}
+                        {% else %}
                             <a href="{% url 'product_status' product.id %}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
                                 List
                             </a>
-                            {% endif %}
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -66,9 +67,8 @@
 <div id="addProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
         <h3 class="text-lg font-semibold mb-4">Add New Product</h3>
-        <form method="POST" enctype="multipart/form-data" action="{% url 'add_product' %}">
+        <form method="POST" enctype="multipart/form-data" action="{% url 'add_product' %}" id="addProductForm" >
             {% csrf_token %}
-            {{ form.as_p }}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <div class="mb-4">
@@ -99,16 +99,11 @@
                 </div>
                 <div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="image">Image</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="images" type="file" name="images" accept="image/*" multiple required>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="images">Images (Minimum 3)</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="images" type="file" name="images" accept="image/*" multiple required onchange="handleImageUpload(event)">
+                        <p class="text-gray-500 mt-2">Please upload at least 3 images.</p>
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Crop Image</label>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-64">
-                            <!-- Add image cropping functionality here -->
-                            <p class="text-gray-500">Image cropping area</p>
-                        </div>
-                    </div>
+                    <div id="imagePreviewContainer" class="mb-4"></div>
                 </div>
             </div>
             <div class="flex items-center justify-between mt-4">
@@ -119,45 +114,56 @@
                     Cancel
                 </button>
             </div>
-        </form>   
-     </div>
+        </form>
+        <div id="cropModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+            <div class="relative top-20 mx-auto p-5 border w-1/2 max-w-lg h-80 max-h-[calc(100vh-4rem)] shadow-lg rounded-md bg-white">
+                <img id="cropImage" src="" alt="Image to crop" class="w-full h-auto max-h-full object-contain mb-4">
+                <div class="flex justify-end space-x-2">
+                    <button id="cropButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Crop
+                    </button>
+                    <button type="button" onclick="closeCropModal()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+
 <!-- Edit Product Modal -->
-{% for product in products %}
-<div id="editProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+<div id="editProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" onsubmit="return validateForm('addProductForm', false)" id="addProductForm">
     <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
         <h3 class="text-lg font-semibold mb-4">Edit Product</h3>
-        
-        <form method="post" enctype="multipart/form-data" action="{% url 'edit_product' product.id %}">
+        <form method="POST" enctype="multipart/form-data" id="editProductForm" onsubmit="return validateForm('editProductForm', true)">
             {% csrf_token %}
-            {{ form.as_p }}
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-name">Name</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-name" type="text" name="name" value="{{ product.name }}" required>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-name" type="text" name="name" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-description">Description</label>
-                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-description" name="description" required>{{ product.description }}</textarea>
+                        <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-description" name="description" required></textarea>
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-price">Price</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-price" type="number" step="0.01" name="price" value="{{ product.price }}" required>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-price" type="number" step="0.01" name="price" required>
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-category">Category</label>
                         <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-category" name="category" required>
                             <option value="">Select a category</option>
                             {% for category in categories %}
-                                <option value="{{ category.id }}" {% if category.id == product.category.id %}selected{% endif %}>{{ category.name }}</option>
+                                <option value="{{ category.id }}">{{ category.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stock">Stock</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-stock" type="number" name="stock" value="{{ product.stock }}" required>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-stock" type="number" name="stock" required>
                     </div>
                 </div>
                 <div>
@@ -171,7 +177,7 @@
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-images">Images</label>
                         <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-images" type="file" name="images" accept="image/*" multiple>
-                        <p class="text-gray-500 mt-2">You can upload multiple images. Existing images will be shown after selecting a file.</p>
+                        <p class="text-gray-500 mt-2">You can upload new images. Existing images will be shown after selecting a file.</p>
                     </div>
                 </div>
             </div>
@@ -184,10 +190,31 @@
                 </button>
             </div>
         </form>
-        
     </div>
 </div>
-{% endfor %}
+
+
+    <!-- Crop Modal -->
+    <div id="cropModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <h3 class="text-lg font-semibold mb-4">Crop Image</h3>
+            <div class="mb-4">
+                <img id="cropImage" src="" alt="Image to crop">
+            </div>
+            <div class="flex justify-between">
+                <button id="cropButton" class="bg-custom-orange hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                    Crop
+                </button>
+                <button onclick="closeCropModal()" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/4.1.0/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropper/4.1.0/cropper.min.js"></script>
 
 <script>
     function openModal(modalId) {
@@ -198,6 +225,219 @@
         document.getElementById(modalId).classList.add('hidden');
     }
 
+    function openEditModal(id, name, description, price, stock, categoryId) {
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-description').value = description;
+        document.getElementById('edit-price').value = price;
+        document.getElementById('edit-stock').value = stock;
+        document.getElementById('edit-category').value = categoryId;
+        document.getElementById('editProductForm').action = `{% url 'edit_product' 0 %}`.replace('0', id);
+        openModal('editProductModal');
+    }
+
+
+
+    //validation
+    function validateForm(formId, isEdit) {
+        const form = document.getElementById(formId);
+        const price = parseFloat(form.querySelector('[name="price"]').value);
+        const stock = parseInt(form.querySelector('[name="stock"]').value);
+
+        if (price <= 0) {
+            alert("Price must be positive");
+            return false;
+        }
+
+        if (stock < 0) {
+            alert("Stock must be non-negative");
+            return false;
+        }
+
+        return true;
+    }
+
+</script>
+
+
+{% comment %} Cropper {% endcomment %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+
+
+<script>
+   
+</script>
+
+
+<script>
+    let cropper;
+    let currentImageIndex;
+    let croppedImages = [];
+    
+    function handleImageUpload(event) {
+        const files = event.target.files;
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = ''; // Clear previous previews
+    
+        if (files.length < 3) {
+            alert('Please upload at least 3 images.');
+            return;
+        }
+    
+        croppedImages = []; // Reset cropped images array
+    
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.classList.add('relative', 'inline-block', 'mr-2', 'mb-2');
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('w-32', 'h-32', 'object-cover', 'cursor-pointer');
+                img.alt = `Image ${index + 1}`;
+                img.onclick = () => openCropModal(index);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.classList.add('absolute', 'top-0', 'right-0', 'bg-red-500', 'text-white', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center');
+                removeBtn.onclick = () => {
+                    imgWrapper.remove();
+                    croppedImages[index] = null;
+                    if (document.querySelectorAll('#imagePreviewContainer img').length < 3) {
+                        alert('Please maintain at least 3 images.');
+                    }
+                };
+                
+                imgWrapper.appendChild(img);
+                imgWrapper.appendChild(removeBtn);
+                container.appendChild(imgWrapper);
+    
+                croppedImages.push(null); // Initialize with null for each image
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+    
+    function openCropModal(index) {
+        currentImageIndex = index;
+        const cropModal = document.getElementById('cropModal');
+        const cropImage = document.getElementById('cropImage');
+        cropImage.src = document.querySelectorAll('#imagePreviewContainer img')[index].src;
+        cropModal.classList.remove('hidden');
+    
+        if (cropper) {
+            cropper.destroy();
+        }
+        cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+        });
+    }
+    
+    function closeCropModal() {
+        const cropModal = document.getElementById('cropModal');
+        cropModal.classList.add('hidden');
+        if (cropper) {
+            cropper.destroy();
+        }
+    }
+    
+    document.getElementById('cropButton').onclick = function() {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas();
+            const croppedImageUrl = canvas.toDataURL('image/jpeg');
+            document.querySelectorAll('#imagePreviewContainer img')[currentImageIndex].src = croppedImageUrl;
+            
+            canvas.toBlob((blob) => {
+                const file = new File([blob], `cropped_image_${currentImageIndex}.jpg`, { type: 'image/jpeg' });
+                croppedImages[currentImageIndex] = file;
+            });
+            
+            closeCropModal();
+        }
+    }
+    
+    function validateForm(formId) {
+        const imageInput = document.getElementById('images');
+        if (imageInput.files.length < 3) {
+            alert('Please upload at least 3 images.');
+            return false;
+        }
+        return true;
+    }
+    
+    document.getElementById('addProductForm').onsubmit = function(e) {
+        if (!validateForm('addProductForm')) {
+            e.preventDefault();
+            return false;
+        }
+    
+        const formData = new FormData(this);
+        croppedImages.forEach((file, index) => {
+            if (file) {
+                formData.append('images', file);
+            } else {
+                formData.append('images', document.getElementById('images').files[index]);
+            }
+        });
+    
+        fetch('{% url "add_product" %}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Product added successfully');
+                window.location.href = '{% url "list_products" %}';
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please check the console and try again.');
+        });
+    
+        e.preventDefault(); // Prevent the default form submission
+    }
+    
     
 </script>
+
+<style>
+    .preview-image {
+        max-width: 100px;
+        margin: 5px;
+    }
+    .img-wrapper {
+        display: inline-block;
+        position: relative;
+    }
+    .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        border-radius: 50%;
+        padding: 2px 5px;
+    }
+    .crop-btn {
+        display: block;
+        margin-top: 5px;
+        color: blue;
+    }
+</style>
+
+
+
+
 {% endblock %}
+
+
+

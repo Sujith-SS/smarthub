@@ -4,10 +4,11 @@ from django.contrib.auth.forms import UserCreationForm,AuthenticationForm,Passwo
 
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(max_length=200, help_text='Required')
+    name = forms.CharField(max_length=200, help_text='Required')
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ('name', 'email', 'password1', 'password2')
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -17,13 +18,10 @@ class SignUpForm(UserCreationForm):
 
 class OTPForm(forms.Form):
     otp = forms.CharField(max_length=6)
-    
-
-
 
 class LoginForm(AuthenticationForm):
-    username = forms.CharField(max_length=254, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    username = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
     
 
 

@@ -53,10 +53,12 @@ p{
 .col-2{
     flex-basis: 50%;
     min-width: 300px;
+    
 }
 .col-2 img{
     max-width: 100%;
-    padding: 50px 0;
+    padding: 73px 0;
+
 }
 .col-2 h1{
     font-size: 50px;
@@ -391,14 +393,15 @@ th:last-child{
 }
 .form-container{
     background: #fff;
-    width: 367px;
-    height: 445px;
+    width: 300px;
+    height: 400px;
     position: relative;
     text-align: center;
     padding: 20px 0;
     margin: auto;
     box-shadow: 0 0 20px 0px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    border-radius: 4%;
 }
 .form-container span{
     font-weight: bold;
@@ -415,7 +418,7 @@ th:last-child{
     max-width: 300px;
     padding: 0 20px;
     position: absolute;
-    
+    top: 130px;
     transition: transform 1s;
 }
 form input{
@@ -480,6 +483,22 @@ form a{
     }
 }
 
+
+#google-btn {
+    text-decoration: none; /* Removes underline */
+    color: inherit; /* Inherits text color from parent */
+    display: inline-block; /* Makes it behave like a block element but inline with content */
+    padding: 5px; /* Optional padding */
+    
+}
+
+#google-btn img {
+    vertical-align: middle; /* Aligns the icon vertically with text */
+    width: 20px;
+}
+
+
+
 /* Media query for 600 screen size */
 @media only screen and (max-width: 600px){
 
@@ -503,57 +522,3 @@ form a{
         display: none;
     }
 }
-
-/* Otp modal */
-
-
-    .modal {
-        display: none; 
-        position: fixed; 
-        z-index: 1; 
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto; 
-        background-color: rgb(0,0,0); 
-        background-color: rgba(0,0,0,0.4); 
-        padding-top: 60px; 
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: 5% auto; 
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%; 
-        max-width: 400px;
-    }
-
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .otp-input {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
-    }
-
-    .otp-input input {
-        width: 40px;
-        height: 40px;
-        font-size: 24px;
-        text-align: center;
-    }
-

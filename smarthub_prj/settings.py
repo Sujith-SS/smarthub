@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'adminapp',
     'homeapp',
+    'productsapp',
     'users',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -74,6 +75,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.request',
+                # 'allauth.account.context_processors.account',
+                # 'allauth.socialaccount.context_processors.socialaccount',
             ],
         },
     },
@@ -95,6 +98,7 @@ DATABASES = {
         'PORT': '5432',  
     }
 }
+
 
 
 # Password validation
@@ -170,6 +174,7 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH_PARAMS': {
             'access_type': 'online',
         }
+    
     }
 }
 
@@ -177,7 +182,7 @@ SOCIALACCOUNT_PROVIDERS = {
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
-  
+    'users.custom_EmailBackend.EmailBackend',
 )
 
 LOGIN_REDIRECT_URL = '/'

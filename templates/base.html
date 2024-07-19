@@ -9,7 +9,16 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+      </script>
+    {% url 'product_list' as product_list %}
+    {% url 'home' as home %}
+
 </head>
 
 <body>
@@ -35,11 +44,12 @@
         <nav>
             <ul id="MenuItems">
                 <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="">Products</a></li>
+                <li><a href="{% url 'productsapp:product_list' %}">Products</a></li>
                 <li><a href="">About</a></li>
                 <li><a href="">Contact</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'account' %}">Profile</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
                 {% else %}
                     <li><a href="{% url 'account' %}">Account</a></li>
                 {% endif %}
@@ -118,6 +128,7 @@
             }
         });
     </script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 
 </html>
