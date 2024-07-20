@@ -82,6 +82,7 @@ def verify_otp(request):
         form = OTPForm(request.POST)
         if form.is_valid():
             otp_code = form.cleaned_data.get('otp')
+            
             otp = request.session.get('otp')
             otp_expires_at = request.session.get('otp_expires_at')
             if otp and otp_expires_at:
@@ -122,7 +123,7 @@ def resend_otp(request):
     
     otp = generate_otp()
     
-    print(otp)
+    print(f"otp{otp}")
     expires_at = timezone.now() + timedelta(minutes=5)
     request.session['otp'] = otp
     request.session['otp_expires_at'] = expires_at.isoformat()

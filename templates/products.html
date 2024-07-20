@@ -43,6 +43,7 @@
     </div>
     <div class="row">
         {% for product in page_obj %}
+        <a href="{% url 'productsapp:product_detail' product.id %}" class="product-link">
         <div class="col-4"data-aos="flip-left" data-aos-easing="ease-out-cubic" data-aos-duration="2000">
             {% if product.images.first %}
                 <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
@@ -59,13 +60,14 @@
                     {% endif %}
                 {% endfor %}
             </div>
-            <p>${{ product.price }}</p>
+            <p>₹{{ product.price }}</p>
             <div class="product-actions">
                 <a href="#" class="btn" onclick="addToCart({{ product.id }})">Add To Cart</a>
                 <a href="#" class="wishlist" onclick="addToWishlist({{ product.id }})">
                     <i class="fa fa-heart"></i>
                 </a>
             </div>
+        </a>
         </div>
         {% empty %}
         <p>No products available.</p>

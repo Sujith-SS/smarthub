@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    caret-color: transparent;
 }
 .front-image{
     width: 22em;
@@ -522,3 +523,11 @@ form a{
         display: none;
     }
 }
+
+
+
+
+/* Zoom */
+
+/* CSS for Zoom Effect */
+

@@ -90,7 +90,7 @@ def list_categories(request):
     if query:
         categories = Category.objects.filter(name__icontains=query)
     else:
-        categories = Category.objects.all()
+        categories = Category.objects.all().order_by('name')
     return render(request, 'admin_categorymanagement.html', {'categories': categories})
 
 # Add category

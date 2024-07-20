@@ -22,12 +22,12 @@ def product_list(request):
     if category:
         products = products.filter(category__name=category)
     
-    # Add pagination
+    #pagination
     paginator = Paginator(products, 12)  # Show 12 products per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Get all categories for the filter dropdown
+    
     categories = Category.objects.filter(is_active=True)
     
     context = {
@@ -42,4 +42,9 @@ def product_list(request):
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    return render(request, 'product_details.html', {'product': product})
+    related_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
+    context = {
+        'product': product,
+        'related_products': related_products
+    }
+    return render(request, 'product_details.html', context)
