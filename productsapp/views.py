@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from adminapp.models import Product, Category
 
 def product_list(request):
-    products = Product.objects.all()
+    products = Product.objects.filter(is_active=True)
     print(products)
     print(f"Number of products: {products.count()}")
     
@@ -28,7 +28,7 @@ def product_list(request):
     page_obj = paginator.get_page(page_number)
     
     # Get all categories for the filter dropdown
-    categories = Category.objects.all()
+    categories = Category.objects.filter(is_active=True)
     
     context = {
         'page_obj': page_obj,
