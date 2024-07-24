@@ -6,6 +6,29 @@
 {% block title %}Account | RedStore{% endblock %}
 
 {% block main_content %}
+
+<style>
+    .google-signin {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    
+    .google-signin p {
+        display: inline-block;
+        cursor: pointer;
+        margin: -59px;
+    }
+    
+    .google-signin img {
+        vertical-align: middle;
+        width: 20px; /* Adjust the size as needed */
+        margin-right: 8px;
+    }
+
+    
+</style>
+
 <!-- Account Page -->
 <div class="account-page">
     <div class="container">
@@ -20,33 +43,29 @@
                         <span onclick="register()">Register</span>
                         <hr id="Indicator">
                     </div>
-                    {% comment %} {% if messages %}
-                    <ul class="messages">
-                        {% for message in messages %}
-                        <li>{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %} {% endcomment %}
+                   
                     
-                    <!-- Login Form -->
-                    <form id="LoginForm" method="post" action="{% url 'login' %}" >
+                    <form id="LoginForm" method="post" action="{% url 'login' %}">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
-                        {{ form.email.errors }}
-                        {{ form.username }}
-                        {{ form.password }}
-                        {% comment %} <input type="email" name="email" placeholder="Email" required>
-                        {{ form.password.errors }}
-                        <input type="password" name="password" placeholder="Password" required>  {% endcomment %}
+                        <div>
+                            {{ form.username.errors }}
+                            <input type="text" name="{{ form.username.name }}" placeholder="Email" required>
+                        </div>
+                        <div>
+                            {{ form.password.errors }}
+                            <input type="password" name="{{ form.password.name }}" placeholder="Password" required>
+                        </div>
                         <button type="submit" class="btn">Login</button>
-                        <a href="{% url 'password_reset_request' %}">Forgot Password</a>
+                        <a href="{% url 'password_reset_request' %}" class="forgot-password">Forgot Password</a>
                         <!-- Google Sign-in -->
-                        <div style="margin-top: 10px;">
-                            <p style="cursor: pointer;" onclick="window.location.href='{% provider_login_url 'google' %}'">
-                                <i class="fa fa-google" aria-hidden="true" style="color:red;"></i> Sign in with Google
+                        <div class="google-signin">
+                            <p onclick="window.location.href='{% provider_login_url 'google' %}'">
+                                <img src="{% static 'images/googleicon.png' %}" alt="Google logo"> Sign in with Google
                             </p>
                         </div>
                     </form>
+                    
                     
                     <!-- Registration Form -->
                     <form id="RegForm" method="post" action="{% url 'signup' %} " >
@@ -86,25 +105,38 @@
         Indicator.style.transform = "translate(0px)";
     }
 
-
-
-
-
-    {% comment %} document.addEventListener('DOMContentLoaded', function() {
-        {% if messages %}
-            {% for message in messages %}
-                Swal.fire({
-                    title: '{{ message.tags|title }}!',
-                    text: "{{ message }}",
-                    icon: '{{ message.tags }}',
-                    confirmButtonText: 'OK'
-                }){% if message.tags == 'success' %}.then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = "{% url 'home' %}";
-                    }
-                }){% endif %};
-            {% endfor %}
-        {% endif %}
-    }); {% endcomment %}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get('message');
+    const action = urlParams.get('action');
+
+    if (message && action) {
+        let title, icon;
+        switch (action) {
+            case 'login':
+                title = 'Logged In Successfully!';
+                icon = 'success';
+                break;
+            case 'signup':
+                title = 'Signed Up Successfully!';
+                icon = 'success';
+                break;
+            case 'logout':
+                title = 'Logged Out Successfully!';
+                icon = 'info';
+                break;
+        }
+
+        Swal.fire({
+            title: title,
+            text: message,
+            icon: icon,
+            confirmButtonText: 'OK'
+        });
+    }
+</script>
+
 {% endblock %}

@@ -1,7 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
-# from .models import Product, Category
-from adminapp.models import Product, Category
+from productsapp.models import Category, ProductImage, Product
 
 def product_list(request):
     products = Product.objects.filter(is_active=True)

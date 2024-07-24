@@ -133,10 +133,10 @@
 
 
 <!-- Edit Product Modal -->
-<div id="editProductModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" onsubmit="return validateForm('addProductForm', false)" id="addProductForm">
+<div id="editProductModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
         <h3 class="text-lg font-semibold mb-4">Edit Product</h3>
-        <form method="POST" enctype="multipart/form-data" id="editProductForm" onsubmit="return validateForm('editProductForm', true)">
+        <form id="editProductForm" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -167,17 +167,12 @@
                     </div>
                 </div>
                 <div>
+                    <div id="edit-image-preview" class="mb-4"></div>
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Crop Image</label>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center h-64">
-                            <!-- Add image cropping functionality here -->
-                            <p class="text-gray-500">Image cropping area</p>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-images">Images</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-images" type="file" name="images" accept="image/*" multiple>
-                        <p class="text-gray-500 mt-2">You can upload new images. Existing images will be shown after selecting a file.</p>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="new-image">New Images</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="new-image" type="file" name="new_images" accept="image/*" multiple>
+                        <div id="new-image-preview" class="mt-2"></div>
+                        <p class="text-gray-500 mt-2">You can upload new images. Existing images will be shown below.</p>
                     </div>
                 </div>
             </div>
@@ -192,6 +187,7 @@
         </form>
     </div>
 </div>
+ 
 
 
     <!-- Crop Modal -->
@@ -225,15 +221,141 @@
         document.getElementById(modalId).classList.add('hidden');
     }
 
-    function openEditModal(id, name, description, price, stock, categoryId) {
-        document.getElementById('edit-name').value = name;
-        document.getElementById('edit-description').value = description;
-        document.getElementById('edit-price').value = price;
-        document.getElementById('edit-stock').value = stock;
-        document.getElementById('edit-category').value = categoryId;
-        document.getElementById('editProductForm').action = `{% url 'edit_product' 0 %}`.replace('0', id);
-        openModal('editProductModal');
+
+
+//Edit Product
+function openEditModal(productId) {
+    fetch(`/edit_product/${productId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const product = data.product;
+            document.getElementById('edit-name').value = product.name;
+            document.getElementById('edit-description').value = product.description;
+            document.getElementById('edit-price').value = product.price;
+            document.getElementById('edit-stock').value = product.stock;
+            document.getElementById('edit-category').value = product.category_id;
+
+            // Display existing images
+            const imageContainer = document.getElementById('edit-image-preview');
+            imageContainer.innerHTML = ''; // Clear existing previews
+            product.image_urls.forEach((imageUrl, index) => {
+                const imgWrapper = document.createElement('div');
+                imgWrapper.classList.add('relative', 'inline-block', 'mr-2', 'mb-2');
+
+                const img = document.createElement('img');
+                img.src = imageUrl;
+                img.classList.add('w-32', 'h-32', 'object-cover', 'cursor-pointer');
+                img.alt = `Image ${index + 1}`;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.classList.add('absolute', 'top-0', 'right-0', 'bg-red-500', 'text-white', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center');
+                removeBtn.onclick = () => removeImage(index, productId);
+
+                imgWrapper.appendChild(img);
+                imgWrapper.appendChild(removeBtn);
+                imageContainer.appendChild(imgWrapper);
+            });
+
+            // New images preview
+            const newImageInput = document.getElementById('new-image');
+            newImageInput.onchange = () => previewNewImages(newImageInput.files);
+
+            document.getElementById('editProductForm').onsubmit = function(e) {
+                e.preventDefault();
+                submitEditForm(productId);
+            };
+
+            openModal('editProductModal');
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function previewNewImages(files) {
+    const newImageContainer = document.getElementById('new-image-preview');
+    newImageContainer.innerHTML = ''; // Clear existing previews
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgWrapper = document.createElement('div');
+            imgWrapper.classList.add('relative', 'inline-block', 'mr-2', 'mb-2');
+
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.classList.add('w-32', 'h-32', 'object-cover');
+
+            imgWrapper.appendChild(img);
+            newImageContainer.appendChild(imgWrapper);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function submitEditForm(productId) {
+    const form = document.getElementById('editProductForm');
+    const formData = new FormData(form);
+
+    fetch(`/edit_product/${productId}/`, {
+        method: 'PATCH',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Product updated successfully');
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An unexpected error occurred. Please check the console and try again.');
+    });
+}
+
+function removeImage(index, productId) {
+    fetch(`/remove_product_image/${productId}/${index}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the image from the UI
+            const imageContainer = document.getElementById('edit-image-preview');
+            imageContainer.children[index].remove();
+        } else {
+            alert('Failed to remove image: ' + data.error);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
+    return cookieValue;
+}
+
+
+
+
 
 
 

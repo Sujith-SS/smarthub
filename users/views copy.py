@@ -22,18 +22,6 @@ from django.conf import settings
 
 
 
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import os
-
-
-# Path to the email template
-template_path = os.path.join(os.path.dirname(__file__), 'email.html')
-
-# Read the HTML template once at the start
-with open(template_path, 'r', encoding='utf-8') as file:
-    html_template = file.read()
-    
 
 
 
@@ -46,21 +34,16 @@ def generate_otp():
      
 
 def send_otp_email(email, otp):
-    html_content = html_template.replace("123456", otp)
-    subject = 'Your OTP for Verification'
+    subject = 'Your OTP for Verificatio'
+    message = f'Your OTP is: {otp}'
     from_email = settings.DEFAULT_FROM_EMAIL
     recipient_list = [email]
     
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = ", ".join(recipient_list)
-    msg['Subject'] = subject
-    msg.attach(MIMEText(html_content, 'html'))
-    
     try:
-        send_mail(subject, '', from_email, recipient_list, html_message=html_content)
+        send_mail(subject, message, from_email, recipient_list)
         return True
     except Exception as e:
+        
         return False
     
         

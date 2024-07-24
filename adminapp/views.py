@@ -5,10 +5,11 @@ from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.models import User
-from .models import Category, Product, ProductImage
+from productsapp.models import Category, ProductImage, Product
 from django.http import JsonResponse
 import logging
 from django.db import transaction
+from django.views.decorators.http import require_http_methods
 
 
 def admin_login(request):
@@ -23,6 +24,7 @@ def admin_login(request):
         else:
             messages.error(request, 'Invalid username or password.')
     return render(request, 'admin_signin.html')
+
 
 
 
@@ -214,35 +216,57 @@ def add_product(request):
 
 
 # Edit product
-@staff_member_required(login_url='admin_login')
+
+@require_http_methods(["GET", "PATCH"])
 def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    if request.method == 'POST':
-        product.name = request.POST.get('name')
-        product.description = request.POST.get('description')
-        product.price = request.POST.get('price')
-        product.stock = request.POST.get('stock')
+    
+    if request.method == 'PATCH':
+        product.name = request.POST.get('name', product.name)
+        product.description = request.POST.get('description', product.description)
+        product.price = request.POST.get('price', product.price)
+        product.stock = request.POST.get('stock', product.stock)
         category_id = request.POST.get('category')
-        product.category = get_object_or_404(Category, id=category_id, is_active=True)
+        if category_id:
+            product.category = get_object_or_404(Category, id=category_id, is_active=True)
         
         images = request.FILES.getlist('images')
         if images:
-            if len(images) < 3:
-                messages.error(request, "Please upload at least 3 images.")
-                return redirect('edit_product', product_id=product_id)
-            
-            product.images.all().delete()
             for image in images:
                 product_image = ProductImage.objects.create(image=image)
                 product.images.add(product_image)
         
         product.save()
-        messages.success(request, "Product updated successfully.")
-        return redirect('list_products')
+        return JsonResponse({'success': True, 'message': 'Product updated successfully.'})
     
+    # GET request - return product data including image URLs
     categories = Category.objects.filter(is_active=True)
-    return render(request, 'admin_productmanagement.html', {'product': product, 'categories': categories})
+    image_urls = [image.image.url for image in product.images.all()]
+    return JsonResponse({
+        'product': {
+            'id': product.id,
+            'name': product.name,
+            'description': product.description,
+            'price': str(product.price),
+            'stock': product.stock,
+            'category_id': product.category.id,
+            'image_urls': image_urls
+        },
+        'categories': list(categories.values('id', 'name'))
+    })
 
+@require_http_methods(["POST"])
+def remove_product_image(request, product_id, image_index):
+    product = get_object_or_404(Product, id=product_id)
+    try:
+        image = product.images.all()[image_index]
+        product.images.remove(image)
+        image.delete()
+        return JsonResponse({'success': True})
+    except IndexError:
+        return JsonResponse({'success': False, 'error': 'Image not found'})
+    
+    
 # Toggle product status
 @staff_member_required(login_url='admin_login')
 def product_status(request, product_id):

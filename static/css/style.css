@@ -393,7 +393,7 @@ th:last-child{
     background: radial-gradient(#fff, #ffd6d6);
 }
 .form-container{
-    background: #fff;
+    background: transparent;
     width: 300px;
     height: 400px;
     position: relative;
@@ -419,15 +419,20 @@ th:last-child{
     max-width: 300px;
     padding: 0 20px;
     position: absolute;
-    top: 130px;
+    top: 98px;
     transition: transform 1s;
 }
 form input{
-    width: 100%;
-    height: 30px;
+    width: 20em;
+    height: 36px;
     margin: 10px 0;
     padding: 0 10px;
     border: 1px solid #ccc;
+
+}
+
+.google{
+    
 }
 form .btn{
     width: 100%;
@@ -486,17 +491,17 @@ form a{
 
 
 #google-btn {
-    text-decoration: none; /* Removes underline */
-    color: inherit; /* Inherits text color from parent */
-    display: inline-block; /* Makes it behave like a block element but inline with content */
-    padding: 5px; /* Optional padding */
+    text-decoration: none; 
+    color: inherit; 
+    display: inline-block; 
+    padding: 5px;
     
 }
 
 #google-btn img {
-    vertical-align: middle; /* Aligns the icon vertically with text */
+    vertical-align: middle; 
     width: 20px;
-}
+} 
 
 
 
@@ -527,7 +532,4 @@ form a{
 
 
 
-/* Zoom */
-
-/* CSS for Zoom Effect */
 

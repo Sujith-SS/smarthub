@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Profile | Smarthub{% endblock %}
+
+{% block main_content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding:0;
+    
+    }
+    
+    .profile-container {
+        display: flex;
+        max-width: 1200px;
+        margin: 100px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 1s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .sidebar {
+        width: 250px;
+        background-color: #ffffff;
+        border-right: 1px solid #dddddd;
+        padding: 20px;
+        border-radius: 10px 0 0 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #ff7e5f00, #29180a);
+    }
+    
+    .sidebar ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .sidebar ul li {
+        margin-bottom: 15px;
+        transition: transform 0.3s;
+    }
+    
+    .sidebar ul li:hover {
+        transform: translateX(10px);
+    }
+    
+    .sidebar ul li a {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        color: #333333;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s, color 0.3s;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar ul li a:hover {
+        background-color: #ff523b;
+        color: #ffffff;
+    }
+    
+    .sidebar ul li a i {
+        margin-right: 10px;
+        font-size: 1.2em;
+    }
+    
+    .main-content {
+        flex-grow: 1;
+        padding: 40px;
+        background: linear-gradient(135deg, #ff7e5f00, #29180a);
+
+        
+    }
+    
+    .profile-card {
+        
+        color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        transition: transform 0.3s;
+    }
+    
+    .profile-card:hover {
+        transform: scale(1.02);
+    }
+    
+    .profile-image {
+        width: 120px;
+        height: 120px;
+        margin-right: 20px;
+    }
+    
+    .profile-image img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #ffffff;
+    }
+    
+    .profile-info {
+        flex-grow: 1;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #ffffff;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #dddddd;
+        border-radius: 5px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus {
+        border-color: #ffffff;
+    }
+    
+    .edit-btn {
+        background-color: #ffffff;
+        color: #ff523b;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+        font-weight: bold;
+    }
+    
+    .edit-btn:hover {
+        background-color: #ff523b;
+        color: #ffffff;
+    }
+    
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    .modal-content {
+        background-color: #ffffff;
+        margin: 10% auto;
+        padding: 40px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .close {
+        color: #aaaaaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    
+    .close:hover,
+    .close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
+<div class="profile-container">
+    <div class="sidebar">
+        <ul>
+            <li><a href="#"><i class="fa fa-home"></i> Home</a></li>
+            <li><a href="#"><i class="fa fa-wallet"></i> Wallet</a></li>
+            <li><a href="#"><i class="fa fa-shopping-bag"></i> Orders</a></li>
+            <li><a href="#"><i class="fa fa-map-marker"></i> Addresses</a></li>
+            <li><a href="#"><i class="fa fa-key"></i> Change Pass</a></li>
+            <li><a href="#"><i class="fa fa-sign-out"></i> Logout</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <h1 style="color: #ff523b; margin-bottom: 20px;">Profile</h1>
+        <div class="profile-card">
+            <div class="profile-image">
+                <img src="{% static 'images/image1.png' %}" alt="User Avatar">
+            </div>
+            <div class="profile-info">
+                <div class="form-group">
+                    <label for="username">User Name</label>
+                    <input type="text" id="username" value="antony vargeez" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" value="sujithconnect@gmail.com" readonly>
+                </div>
+                <button class="edit-btn" id="editBtn">Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Profile</h2>
+        <div class="form-group">
+            <label for="edit-username">User Name</label>
+            <input type="text" id="edit-username" value="antony vargeez">
+        </div>
+        <div class="form-group">
+            <label for="edit-email">Email</label>
+            <input type="email" id="edit-email" value="sujithconnect@gmail.com">
+        </div>
+        <button class="edit-btn">Save</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        var modal = document.getElementById("editModal");
+        var btn = document.getElementById("editBtn");
+        var span = document.getElementsByClassName("close")[0];
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    });
+</script>
+
+{% endblock %}
