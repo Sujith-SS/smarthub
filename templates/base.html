@@ -22,7 +22,7 @@
 
 </head>
 
-<body style="caret-color: transparent;">
+<body >
     {% block content %}
     <style>
         .navbar {
@@ -44,6 +44,7 @@
         </div>
         <nav>
             <ul id="MenuItems">
+                
                 <li><a href="{% url 'home' %}">Home</a></li>
                 <li><a href="{% url 'productsapp:product_list' %}">Products</a></li>
                 <li><a href="">About</a></li>

@@ -3,6 +3,7 @@ from . import views
 
 
 
+
 urlpatterns = [
     path('account/', views.account_view, name='account'),
     path('signup/', views.signup, name='signup'),
@@ -14,6 +15,13 @@ urlpatterns = [
     path('password_reset/', views.password_reset_request, name='password_reset_request'),
     path('password_reset/verify/', views.password_reset_verify, name='password_reset_verify'),
     path('password_reset/complete/', views.password_reset_complete, name='password_reset_complete'),
+    
+    
+    path('profile/', views.user_profile, name='user_profile'),
+    path('profile/update/', views.update_profile, name='update_profile'),
+    
+    
+    
     
     
     path('userprofile/',views.user_profile, name='userprofile')

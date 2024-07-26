@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.utils import timezone
 from django.core.mail import send_mail, BadHeaderError
-from django.contrib.auth import get_backends
 import random
 from .forms import SignUpForm, OTPForm, LoginForm,PasswordResetRequestForm,SetNewPasswordForm
 from django.contrib.auth.models import User
@@ -19,6 +18,15 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.backends import ModelBackend 
 from django.core.mail import send_mail
 from django.conf import settings
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import Profile
+
 
 
 
@@ -34,6 +42,8 @@ template_path = os.path.join(os.path.dirname(__file__), 'email.html')
 with open(template_path, 'r', encoding='utf-8') as file:
     html_template = file.read()
     
+
+
 
 
 
@@ -251,3 +261,49 @@ def password_reset_complete(request):
 
 def user_profile(request):
     return render(request,'user_profile.html')
+
+
+
+# User Profile section
+
+
+
+@login_required
+def user_profile(request):
+    try:
+        profile = request.user.profile
+    except Profile.DoesNotExist:
+        profile = Profile.objects.create(user=request.user)
+    
+    context = {
+        'user': request.user,
+        'profile': profile
+    }
+    return render(request, 'user_profile.html', context)
+
+@login_required
+@require_POST
+def update_profile(request):
+    user = request.user
+    profile = user.profile
+
+    user.first_name = request.POST.get('username', user.first_name)
+    user.email = request.POST.get('email', user.email)
+    profile.phone_number = request.POST.get('phone', profile.phone_number)
+
+    if 'profile_picture' in request.FILES:
+        profile.profile_picture = request.FILES['profile_picture']
+
+    user.save()
+    profile.save()
+
+    return JsonResponse({
+        'status': 'success',
+        'username': user.first_name,
+        'email': user.email,
+        'phone': str(profile.phone_number),
+        'profile_picture_url': profile.profile_picture.url if profile.profile_picture else None
+    })
+
+    
+

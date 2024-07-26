@@ -6,223 +6,333 @@
 {% block main_content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-
 <style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background-color: #f9f9f9;
-        margin: 0;
-        padding:0;
-    
-    }
-    
-    .profile-container {
-        display: flex;
-        max-width: 1200px;
-        margin: 100px auto;
-        padding: 20px;
-        background-color: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        animation: fadeIn 1s ease-in-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .sidebar {
-        width: 250px;
-        background-color: #ffffff;
-        border-right: 1px solid #dddddd;
-        padding: 20px;
-        border-radius: 10px 0 0 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        background: linear-gradient(135deg, #ff7e5f00, #29180a);
-    }
-    
-    .sidebar ul {
-        list-style-type: none;
-        padding: 0;
-    }
-    
-    .sidebar ul li {
-        margin-bottom: 15px;
-        transition: transform 0.3s;
-    }
-    
-    .sidebar ul li:hover {
-        transform: translateX(10px);
-    }
-    
-    .sidebar ul li a {
-        display: flex;
-        align-items: center;
-        padding: 12px;
-        color: #333333;
-        text-decoration: none;
-        border-radius: 5px;
-        transition: background-color 0.3s, color 0.3s;
-        font-weight: bold;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .sidebar ul li a:hover {
-        background-color: #ff523b;
-        color: #ffffff;
-    }
-    
-    .sidebar ul li a i {
-        margin-right: 10px;
-        font-size: 1.2em;
-    }
-    
-    .main-content {
-        flex-grow: 1;
-        padding: 40px;
-        background: linear-gradient(135deg, #ff7e5f00, #29180a);
+   /* Reset some default styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-        
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+/* Main Profile Container */
+.profile-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 60px auto;
+    padding: 0;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px;
+    background-color: #212529;
+    color: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    width: 100%;
+}
+
+.sidebar ul li {
+    margin: 15px 0;
+}
+
+.sidebar ul li a {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #ff523b;
+}
+
+.sidebar ul li a i {
+    margin-right: 10px;
+}
+
+/* Profile Image Styles */
+.profile-image-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+.profile-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.profile-image-container:hover .profile-image-overlay {
+    opacity: 1;
+}
+
+.profile-image-overlay input[type="file"] {
+    display: none;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    background-color: #ffffff;
+}
+
+.main-content h1 {
+    color: #ff523b;
+    margin-bottom: 30px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* Profile Card Styles */
+.profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    transition: transform 0.3s;
+    width: 100%;
+}
+
+.profile-card:hover {
+    transform: scale(1.03);
+}
+
+/* Form Styles */
+.profile-info {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #4A90E2;
+}
+
+/* Button Styles */
+.edit-btn {
+    background-color: #ff523b;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 700;
+    width: 100%;
+}
+
+.edit-btn:hover {
+    background-color: #e03e30;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 10% auto;
+    padding: 40px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .profile-container {
+        flex-direction: column;
     }
-    
-    .profile-card {
-        
-        color: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        display: flex;
-        align-items: center;
-        transition: transform 0.3s;
-    }
-    
-    .profile-card:hover {
-        transform: scale(1.02);
-    }
-    
-    .profile-image {
-        width: 120px;
-        height: 120px;
-        margin-right: 20px;
-    }
-    
-    .profile-image img {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid #ffffff;
-    }
-    
-    .profile-info {
-        flex-grow: 1;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-        color: #ffffff;
-    }
-    
-    .form-group input {
+
+    .sidebar {
         width: 100%;
         padding: 10px;
-        border: 1px solid #dddddd;
-        border-radius: 5px;
-        transition: border-color 0.3s;
     }
-    
-    .form-group input:focus {
-        border-color: #ffffff;
+
+    .main-content {
+        padding: 20px;
     }
-    
-    .edit-btn {
-        background-color: #ffffff;
-        color: #ff523b;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s, color 0.3s;
-        font-weight: bold;
-    }
-    
-    .edit-btn:hover {
-        background-color: #ff523b;
-        color: #ffffff;
-    }
-    
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
+
+    .profile-card {
         width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.4);
-        animation: fadeIn 0.5s ease-in-out;
     }
+
+    .profile-image-container {
+        width: 100px;
+        height: 100px;
+    }
+
+    .main-content h1 {
+        font-size: 24px;
+    }
+
+    .form-group input {
+        padding: 8px;
+    }
+
+    .edit-btn {
+        padding: 8px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar ul li {
+        margin-bottom: 10px;
+    }
+
+    .sidebar ul li a {
+        padding: 8px 10px;
+    }
+
+    .main-content h1 {
+        font-size: 20px;
+    }
+
+    .profile-image-container {
+        width: 80px;
+        height: 80px;
+    }
+}
+    </style>
     
-    .modal-content {
-        background-color: #ffffff;
-        margin: 10% auto;
-        padding: 40px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .close {
-        color: #aaaaaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-    }
-    
-    .close:hover,
-    .close:focus {
-        color: #000;
-        text-decoration: none;
-        cursor: pointer;
-    }
-</style>
 
 <div class="profile-container">
     <div class="sidebar">
+        <div class="profile-image-container">
+            <img id="profileImage" class="profile-image" src="{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% else %}/path/to/default/image.jpg{% endif %}" alt="Profile Picture">
+            <div class="profile-image-overlay">
+                <span>Choose Image</span>
+                <!-- Removed the hidden input from here -->
+            </div>
+        </div>
+        
+        <!-- Modal for Image Upload -->
+        <div id="imageUploadModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" id="closeImageModal">&times;</span>
+                <h2>Upload Profile Image</h2>
+                <form id="uploadImageForm" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="upload-image">Select Image</label>
+                        <input type="file" id="upload-image" name="profile_picture" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="edit-btn">Upload</button>
+                </form>
+            </div>
+        </div>
+        
+        
         <ul>
-            <li><a href="#"><i class="fa fa-home"></i> Home</a></li>
+            <li><a href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a></li>
             <li><a href="#"><i class="fa fa-wallet"></i> Wallet</a></li>
             <li><a href="#"><i class="fa fa-shopping-bag"></i> Orders</a></li>
             <li><a href="#"><i class="fa fa-map-marker"></i> Addresses</a></li>
             <li><a href="#"><i class="fa fa-key"></i> Change Pass</a></li>
-            <li><a href="#"><i class="fa fa-sign-out"></i> Logout</a></li>
+            <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a></li>
         </ul>
     </div>
     <div class="main-content">
-        <h1 style="color: #ff523b; margin-bottom: 20px;">Profile</h1>
+        <h1>User Profile</h1>
         <div class="profile-card">
-            <div class="profile-image">
-                <img src="{% static 'images/image1.png' %}" alt="User Avatar">
-            </div>
             <div class="profile-info">
                 <div class="form-group">
                     <label for="username">User Name</label>
-                    <input type="text" id="username" value="antony vargeez" readonly>
+                    <input type="text" id="username" value="{{ user.first_name }}" readonly>
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" value="sujithconnect@gmail.com" readonly>
+                    <input type="email" id="email" value="{{ user.email }}" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" value="{{ user.profile.phone_number|default_if_none:'' }}" readonly>
                 </div>
                 <button class="edit-btn" id="editBtn">Edit</button>
             </div>
@@ -231,42 +341,161 @@
 </div>
 
 <!-- Modal -->
-<div id="editModal" class="modal">
+<div id="editModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2>Edit Profile</h2>
-        <div class="form-group">
-            <label for="edit-username">User Name</label>
-            <input type="text" id="edit-username" value="antony vargeez">
-        </div>
-        <div class="form-group">
-            <label for="edit-email">Email</label>
-            <input type="email" id="edit-email" value="sujithconnect@gmail.com">
-        </div>
-        <button class="edit-btn">Save</button>
+        <form id="editProfileForm" method="post" action="{% url 'update_profile' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="edit-username">User Name</label>
+                <input type="text" id="edit-username" name="username" value="{{ user.first_name }}">
+            </div>
+            <div class="form-group">
+                <label for="edit-email">Email</label>
+                <input type="email" id="edit-email" name="email" value="{{ user.email }}">
+            </div>
+            <div class="form-group">
+                <label for="edit-phone">Phone Number</label>
+                <input type="tel" id="edit-phone" name="phone" value="{{ user.profile.phone_number|default_if_none:'' }}">
+            </div>
+            <button type="submit" class="edit-btn">Save</button>
+        </form>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
-        var modal = document.getElementById("editModal");
-        var btn = document.getElementById("editBtn");
-        var span = document.getElementsByClassName("close")[0];
+    
 
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
+    $(document).ready(function() {
+        // Handle profile picture change
+        $('#edit-profile-picture').on('change', function() {
+            var formData = new FormData();
+            formData.append('profile_picture', this.files[0]);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+            $.ajax({
+                url: '{% url "update_profile" %}',
+                type: 'POST',
+                data: formData,
+                processData: false, // Prevent jQuery from processing the data
+                contentType: false, // Prevent jQuery from overriding the content type
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#profileImage').attr('src', response.profile_picture_url);
+                        alert('Profile picture updated successfully!');
+                    } else {
+                        alert('Error updating profile picture');
+                    }
+                },
+                error: function() {
+                    alert('Error updating profile picture');
+                }
+            });
+        });
+    
+        // Open the file input when clicking the overlay
+        $('.profile-image-overlay').on('click', function() {
+            $('#edit-profile-picture').click();
+        });
+    
+        // Open the edit modal
+        $('#editBtn').on('click', function() {
+            $('#editModal').show();
+        });
+    
+        // Close the modal when clicking the close button
+        $('.close').on('click', function() {
+            $('#editModal').hide();
+        });
+    
+        // Close the modal when clicking outside of the modal content
+        $(window).on('click', function(event) {
+            if (event.target == $('#editModal')[0]) {
+                $('#editModal').hide();
             }
-        }
+        });
+    
+        // Handle the form submission for editing profile
+        $('#editProfileForm').on('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            var formData = $(this).serialize(); // Serialize form data
+    
+            $.ajax({
+                url: $(this).attr('action'), // URL from form action attribute
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#username').val(response.username);
+                        $('#email').val(response.email);
+                        $('#phone').val(response.phone);
+                        $('#editModal').hide();
+                        alert('Profile updated successfully!');
+                    } else {
+                        alert('Error updating profile');
+                    }
+                },
+                error: function() {
+                    alert('Error updating profile');
+                }
+            });
+        });
     });
-</script>
+
+
+
+
+    $(document).ready(function() {
+        // Open the image upload modal when clicking the overlay
+        $('.profile-image-overlay').on('click', function() {
+            $('#imageUploadModal').show();
+        });
+    
+        // Close the image upload modal when clicking the close button
+        $('#closeImageModal').on('click', function() {
+            $('#imageUploadModal').hide();
+        });
+    
+        // Close the modal when clicking outside of the modal content
+        $(window).on('click', function(event) {
+            if (event.target == $('#imageUploadModal')[0]) {
+                $('#imageUploadModal').hide();
+            }
+        });
+    
+        // Handle the form submission for uploading the image
+        $('#uploadImageForm').on('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            var formData = new FormData(this); // Create FormData object
+    
+            $.ajax({
+                url: '{% url "update_profile" %}', // URL to update profile
+                type: 'POST',
+                data: formData,
+                processData: false, // Prevent jQuery from processing the data
+                contentType: false, // Prevent jQuery from overriding the content type
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#profileImage').attr('src', response.profile_picture_url);
+                        alert('Profile picture updated successfully!');
+                        $('#imageUploadModal').hide(); // Close the modal
+                    } else {
+                        alert('Error updating profile picture');
+                    }
+                },
+                error: function() {
+                    alert('Error updating profile picture');
+                }
+            });
+        });
+    });
+
+
+
+    
+    </script>
+
 
 {% endblock %}
