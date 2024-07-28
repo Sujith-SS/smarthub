@@ -415,3 +415,14 @@ def address_delete(request, pk):
         messages.success(request, 'Address deleted successfully!')
         return JsonResponse({'message': 'Address deleted successfully!'}, status=200)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+@login_required
+def address_set_active(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    Address.objects.filter(user=request.user).update(is_active=False)
+    address.is_active = True
+    address.save()
+    messages.success(request, 'Address set as active successfully!')
+    return JsonResponse({'message': 'Address set as active successfully!'}, status=200)

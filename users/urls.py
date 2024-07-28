@@ -26,6 +26,7 @@ urlpatterns = [
     path('addresses/new/', views.address_create, name='address_create'),
     path('addresses/<int:pk>/edit/', views.address_update, name='address_update'),
     path('addresses/<int:pk>/delete/', views.address_delete, name='address_delete'),
+    path('addresses/set_active/<int:pk>/', views.address_set_active, name='address_set_active'),
     
     
     

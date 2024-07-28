@@ -32,6 +32,24 @@
             background-color: #ffc107; /* Yellow color for edit button */
             border-color: #ffc107;
         }
+
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 30px;
+        }
+        h2 {
+            color: #fd7e14; /* Orange color for headings */
+        }
+        .btn {
+            width: 120px; /* Fixed width for all buttons */
+            margin-right: 5px
+        }
     </style>
 </head>
 <body>
@@ -68,6 +86,12 @@
                     <td>
                         <button class="btn btn-secondary" onclick="editAddress({{ address.pk }}, '{{ address.address_line1 }}', '{{ address.city }}', '{{ address.zipcode }}', '{{ address.country }}')">Edit</button>
                         <button class="btn btn-danger" onclick="confirmDelete({{ address.pk }})">Delete</button>
+                        <button class="btn btn-success" onclick="setActive({{ address.pk }})">Set Active</button>
+                        {% if address.is_active %}
+                        <span class="badge badge-primary">Active</span>
+                        {% else %}
+                        <span class="badge badge-danger">Inactive</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -227,6 +251,23 @@
                     swal("Oops!", xhr.responseJSON.error, "error");
                 });
         });
+
+
+
+        function setActive(pk) {
+            $.post("{% url 'address_set_active' pk=0 %}".replace('0', pk), {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            })
+            .done(function(response) {
+                swal("Success!", response.message, "success").then(() => {
+                    location.reload();
+                });
+            })
+            .fail(function(xhr) {
+                swal("Oops!", xhr.responseJSON.error, "error");
+            });
+        }
+
     </script>
 </body>
 </html>
