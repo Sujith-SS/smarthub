@@ -313,8 +313,8 @@ body {
             <li><a href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a></li>
             <li><a href="#"><i class="fa fa-wallet"></i> Wallet</a></li>
             <li><a href="#"><i class="fa fa-shopping-bag"></i> Orders</a></li>
-            <li><a href="#"><i class="fa fa-map-marker"></i> Addresses</a></li>
-            <li><a href="#"><i class="fa fa-key"></i> Change Pass</a></li>
+            <li><a href="{% url 'address_list' %}"><i class="fa fa-map-marker"></i> Addresses</a></li>
+            <li><a href="{% url 'change_password' %}"><i class="fa fa-key"></i> Change Pass</a></li>
             <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a></li>
         </ul>
     </div>

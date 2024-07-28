@@ -11,22 +11,21 @@
     .google-signin {
         margin-top: 20px;
         text-align: center;
+        padding: 139px 0; /* Added padding for the google-signin section */
     }
 
-    
     .google-signin p {
         display: inline-block;
         cursor: pointer;
-        margin: -59px;
+        margin: 0; /* Adjusted margin to zero for better alignment */
     }
-    
+
     .google-signin img {
         vertical-align: middle;
         width: 20px; /* Adjust the size as needed */
         margin-right: 8px;
     }
 
-    
 </style>
 
 <!-- Account Page -->
@@ -43,7 +42,6 @@
                         <span onclick="register()">Register</span>
                         <hr id="Indicator">
                     </div>
-                   
                     
                     <form id="LoginForm" method="post" action="{% url 'login' %}">
                         {% csrf_token %}
@@ -58,17 +56,17 @@
                         </div>
                         <button type="submit" class="btn">Login</button>
                         <a href="{% url 'password_reset_request' %}" class="forgot-password">Forgot Password</a>
-                        <!-- Google Sign-in -->
-                        <div class="google-signin">
-                            <p onclick="window.location.href='{% provider_login_url 'google' %}'">
-                                <img src="{% static 'images/googleicon.png' %}" alt="Google logo"> Sign in with Google
-                            </p>
-                        </div>
                     </form>
-                    
-                    
+
+                    <!-- Google Sign-in -->
+                    <div class="google-signin">
+                        <p onclick="window.location.href='{% provider_login_url 'google' %}'">
+                            <img src="{% static 'images/googleicon.png' %}" alt="Google logo"> Sign in with Google
+                        </p>
+                    </div>
+
                     <!-- Registration Form -->
-                    <form id="RegForm" method="post" action="{% url 'signup' %} " >
+                    <form id="RegForm" method="post" action="{% url 'signup' %}">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
                         {{ form.name.errors }}
@@ -104,7 +102,6 @@
         LoginForm.style.transform = "translateX(300px)";
         Indicator.style.transform = "translate(0px)";
     }
-
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

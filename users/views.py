@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.utils import timezone
 from django.core.mail import send_mail, BadHeaderError
@@ -25,7 +25,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Profile
+from .models import Profile,Address
+from django.contrib.auth.hashers import check_password, make_password
 
 
 
@@ -292,6 +293,8 @@ def update_profile(request):
     profile.phone_number = request.POST.get('phone', profile.phone_number)
 
     if 'profile_picture' in request.FILES:
+        if profile.profile_picture:
+            profile.profile_picture.delete(save=False)
         profile.profile_picture = request.FILES['profile_picture']
 
     user.save()
@@ -307,3 +310,108 @@ def update_profile(request):
 
     
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import redirect, render
+from django.urls import reverse
+
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == "POST":
+        action = request.POST.get('action')
+        
+        if action == 'send_otp':
+            otp = generate_otp()  # Generate a new OTP
+            if send_otp_email(request.user.email, otp):
+                request.session['password_change_otp'] = otp
+                messages.success(request, "OTP has been sent to your email.")
+            else:
+                messages.error(request, "Failed to send OTP. Please try again.")
+            return redirect('change_password')
+        
+        elif action == 'verify_otp':
+            entered_otp = request.POST.get('otp')
+            stored_otp = request.session.get('password_change_otp')
+            
+            if entered_otp == stored_otp:
+                request.session['otp_verified'] = True
+                return redirect('change_password')
+            else:
+                messages.error(request, "Invalid OTP.")
+                return redirect('change_password')
+        
+        elif action == 'change_password':
+            if not request.session.get('otp_verified'):
+                messages.error(request, "Please verify OTP first.")
+                return redirect('change_password')
+
+            new_password = request.POST.get("new_password")
+            confirm_password = request.POST.get("confirm_password")
+            
+            if new_password != confirm_password:
+                messages.error(request, "New passwords do not match.")
+                return redirect('change_password')
+            
+            if len(new_password) < 8:
+                messages.error(request, "Password must be at least 8 characters long.")
+                return redirect('change_password')
+            
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            messages.success(request, "Password changed successfully.")
+            
+            # Clear session variables
+            del request.session['password_change_otp']
+            del request.session['otp_verified']
+            
+            # Set a context variable to trigger the SweetAlert
+            return render(request, 'change_password.html', {'otp_verified': False, 'password_changed': True})
+    
+    otp_verified = request.session.get('otp_verified', False)
+    return render(request, 'change_password.html', {'otp_verified': otp_verified})
+
+
+
+
+@login_required
+def address_list(request):
+    addresses = Address.objects.filter(user=request.user)
+    return render(request, 'address_list.html', {'addresses': addresses})
+
+@login_required
+def address_create(request):
+    if request.method == 'POST':
+        address_line1 = request.POST.get('address_line1')
+        city = request.POST.get('city')
+        zipcode = request.POST.get('zipcode')
+        country = request.POST.get('country')
+
+        address = Address(user=request.user, address_line1=address_line1, city=city, zipcode=zipcode, country=country)
+        address.save()
+        messages.success(request, 'Address added successfully!')
+        return JsonResponse({'message': 'Address added successfully!'}, status=200)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def address_update(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    if request.method == 'POST':
+        address.address_line1 = request.POST.get('address_line1')
+        address.city = request.POST.get('city')
+        address.zipcode = request.POST.get('zipcode')
+        address.country = request.POST.get('country')
+        address.save()
+        messages.success(request, 'Address updated successfully!')
+        return JsonResponse({'message': 'Address updated successfully!'}, status=200)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def address_delete(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    if request.method == 'POST':
+        address.delete()
+        messages.success(request, 'Address deleted successfully!')
+        return JsonResponse({'message': 'Address deleted successfully!'}, status=200)
+    return JsonResponse({'error': 'Invalid request'}, status=400)

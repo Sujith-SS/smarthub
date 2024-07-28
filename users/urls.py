@@ -19,6 +19,13 @@ urlpatterns = [
     
     path('profile/', views.user_profile, name='user_profile'),
     path('profile/update/', views.update_profile, name='update_profile'),
+    path('change_password/', views.change_password, name='change_password'),
+    
+    
+    path('addresses/', views.address_list, name='address_list'),
+    path('addresses/new/', views.address_create, name='address_create'),
+    path('addresses/<int:pk>/edit/', views.address_update, name='address_update'),
+    path('addresses/<int:pk>/delete/', views.address_delete, name='address_delete'),
     
     
     

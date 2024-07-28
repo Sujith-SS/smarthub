@@ -6,21 +6,31 @@
 {% block main_content %}
 {% load static %}
 
+<style>
+    .product-view-main-image {
+        transition: transform 0.3s ease;
+    }
 
-
+    .product-view-main-image.zoom {
+        transform: scale(1.2);
+        cursor: zoom-in;
+    }
+</style>
 
 <div class="small-container single-product">
     <div class="row">
         <div class="col-2">
             {% if product.images.all %}
-                <img src="{{ product.images.first.image.url }}" width="100%" id="ProductImg">
-                <div class="small-img-row">
+            
+                <img src="{{ product.images.first.image.url }}" width="100%" id="ProductImg" class="product-view-main-image">
+                <div class="small-img-row product-view-thumbnail">
                     {% for image in product.images.all %}
                         <div class="small-img-col">
                             <img src="{{ image.image.url }}" width="100%" class="small-img">
                         </div>
                     {% endfor %}
                 </div>
+            
             {% else %}
                 <img src="{% static 'images/no-image.jpg' %}" width="100%" id="ProductImg">
             {% endif %}
@@ -90,5 +100,26 @@
             ProductImg.src = this.src;
         }
     }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const mainImage = document.querySelector('.product-view-main-image');
+
+        mainImage.addEventListener('mousemove', function (e) {
+            const rect = mainImage.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const xPercent = (x / rect.width) * 100;
+            const yPercent = (y / rect.height) * 100;
+
+            mainImage.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+            mainImage.classList.add('zoom');
+        });
+
+        mainImage.addEventListener('mouseleave', function () {
+            mainImage.classList.remove('zoom');
+            mainImage.style.transformOrigin = 'center center';
+        });
+    });
 </script>
 {% endblock %}
