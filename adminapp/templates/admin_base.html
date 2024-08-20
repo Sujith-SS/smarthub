@@ -72,10 +72,10 @@
                     <li><a href="{% url 'list_categories'%}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-list mr-3 text-orange-500"></i> Category Management
                     </a></li>
-                    <li><a href="{% url 'list_products'%}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="{% url 'list_products' %}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-box mr-3 text-orange-500"></i> Product Management
                     </a></li>
-                    <li><a href="order-management.html" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
+                    <li><a href="{% url 'admin_order_management' %}" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">
                         <i class="fas fa-shopping-cart mr-3 text-orange-500"></i> Order Management
                     </a></li>
                     <li><a href="sales-reports.html" class="flex items-center py-2 px-4 text-gray-700 dark:text-gray-300 hover:bg-custom-orange hover:text-white rounded">

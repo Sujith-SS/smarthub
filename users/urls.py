@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-
+app_name="users"
 
 urlpatterns = [
     path('account/', views.account_view, name='account'),
@@ -21,11 +21,11 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     
     
-
+    path('address-view',views.address_view, name='address_view'),
     path('addresses/', views.address_list, name='address_list'),
-    path('addresses/edit/<int:pk>/', views.address_edit, name='address_edit'),
-    path('addresses/delete/<int:pk>/', views.address_delete, name='address_delete'),
-    path('addresses/set_default/<int:pk>/', views.set_default_address, name='set_default_address'),
+    path('address/<int:pk>/edit/', views.address_edit, name='address_edit'),
+    path('address/<int:pk>/delete/', views.address_delete, name='address_delete'),
+    path('address/<int:pk>/set_default/', views.set_default_address, name='set_default_address'),
 
 
     

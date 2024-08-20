@@ -312,10 +312,10 @@ body {
         <ul>
             <li><a href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a></li>
             <li><a href="#"><i class="fa fa-wallet"></i> Wallet</a></li>
-            <li><a href="#"><i class="fa fa-shopping-bag"></i> Orders</a></li>
-            <li><a href="{% url 'address_list' %}"><i class="fa fa-map-marker"></i> Addresses</a></li>
-            <li><a href="{% url 'change_password' %}"><i class="fa fa-key"></i> Change Pass</a></li>
-            <li><a href="{% url 'logout' %}"><i class="fa fa-sign-out"></i> Logout</a></li>
+            <li><a href="{% url 'checkoutapp:my_orders' %}"><i class="fa fa-shopping-bag"></i> Orders</a></li>
+            <li><a href="{% url 'users:address_view' %}"><i class="fa fa-map-marker"></i> Addresses</a></li>
+            <li><a href="{% url 'users:change_password' %}"><i class="fa fa-key"></i> Change Pass</a></li>
+            <li><a href="{% url 'users:logout' %}"><i class="fa fa-sign-out"></i> Logout</a></li>
         </ul>
     </div>
     <div class="main-content">
@@ -345,7 +345,7 @@ body {
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2>Edit Profile</h2>
-        <form id="editProfileForm" method="post" action="{% url 'update_profile' %}">
+        <form id="editProfileForm" method="post" action="{% url 'users:update_profile' %}">
             {% csrf_token %}
             <div class="form-group">
                 <label for="edit-username">User Name</label>
@@ -376,7 +376,7 @@ body {
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     
             $.ajax({
-                url: '{% url "update_profile" %}',
+                url: '{% url "users:update_profile" %}',
                 type: 'POST',
                 data: formData,
                 processData: false, // Prevent jQuery from processing the data
@@ -471,7 +471,7 @@ body {
             var formData = new FormData(this); // Create FormData object
     
             $.ajax({
-                url: '{% url "update_profile" %}', // URL to update profile
+                url: '{% url "users:update_profile" %}', // URL to update profile
                 type: 'POST',
                 data: formData,
                 processData: false, // Prevent jQuery from processing the data

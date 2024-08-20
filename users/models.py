@@ -37,9 +37,7 @@ class Address(models.Model):
     label = models.CharField(max_length=50)
     is_default = models.BooleanField(default=False)
 
-    class Meta:
-        unique_together = ('user', 'is_default')
-
     def __str__(self):
         return f"{self.label} - {self.address_line1}, {self.city}"
+
 

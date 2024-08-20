@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 
 def validate_positive(value):
     if value < 0:
@@ -25,6 +26,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[validate_positive])
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     stock = models.IntegerField(validators=[validate_positive], null=True)
+    is_available = models.BooleanField(default=True)  
     is_active = models.BooleanField(default=True)
     images = models.ManyToManyField(ProductImage)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -35,3 +37,12 @@ class Product(models.Model):
 
     def image_count(self):
         return self.images.count()
+    
+    
+    def save(self, *args, **kwargs):
+        self.is_available = self.stock > 0 if self.stock is not None else False
+        super(Product, self).save(*args, **kwargs)
+
+
+    
+   

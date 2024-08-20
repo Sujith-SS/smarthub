@@ -1,178 +1,166 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% block title %}Your Cart | Smarthub{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Cart | Smarthub</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
+{% block main_content %}
+    <style>
+        .cart-page {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top : 11em;
+        }
 
-<body>
-    <div class="container">
-        <div class="navbar">
-            <div class="logo">
-                <a href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" alt="logo" width="125px"></a>
-            </div>
-            <nav>
-                <ul id="MenuItems">
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="{% url 'productsapp:product_list' %}">Products</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Contact</a></li>
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'userprofile' %}">Profile</a></li>
-                        <li><a href="{% url 'logout' %}">Logout</a></li>
-                    {% else %}
-                        <li><a href="{% url 'account' %}">Account</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-            <a href="{% url 'cartapp:cart_detail' %}"><img src="{% static 'images/cart.png' %}" width="30px" height="30px"></a>
-            <img src="{% static 'images/menu.png' %}" class="menu-icon" onclick="menutoggle()">
-        </div>
-    </div>
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #ddd;
+        }
 
-    <!-- Cart items details -->
-    <div class="small-container cart-page">
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .cart-item img {
+            max-width: 100px;
+            border-radius: 8px;
+        }
+
+        .cart-item-info {
+            flex: 1;
+            padding-left: 20px;
+        }
+
+        .cart-item-info p {
+            margin: 0;
+        }
+
+        .quantity-selector {
+            margin: 46px;
+            width: 33px;
+            border-color: #ff4d4f;
+            border-radius: 7px;
+        }
+        
+
+        .order-summary {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            margin-left: 20px;
+            height: 320px;
+        }
+
+        .order-summary h2 {
+            margin-top: 0;
+        }
+
+        .order-summary div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-summary .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #fff;
+            background-color: #ff4d4f;
+            border: none;
+            border-radius: 22px;
+            font-weight: 500;
+            margin-top:8em;
+            text-decoration: none;
+        }
+
+        .order-summary .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+
+    <div class="cart-page">
         {% if cart_items %}
-            <table id="cartTable">
-                <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
-                </tr>
+            <div class="cart-items">
                 {% for item in cart_items %}
-                <tr data-product-id="{{ item.product.id }}" data-price="{{ item.product.price }}">
-                    <td>
-                        <div class="cart-info">
-                            {% if item.product.images.first %}
-                                <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}">
-                            {% else %}
-                                <img src="{% static 'images/default-product.jpg' %}" alt="{{ item.product.name }}">
-                            {% endif %}
-                            <div>
-                                <p>{{ item.product.name }}</p>
-                                <small>Price: ${{ item.product.price }}</small>
-                                <br>
-                                <form method="post" action="{% url 'cartapp:remove_from_cart' item.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" style="background:none; border:none; color:red; cursor:pointer;">Remove</button>
-                                </form>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <input type="number" class="quantity" value="{{ item.quantity }}" min="1" max="4">
-                    </td>
-                    <td class="subtotal">${{ item.get_total_price }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            <div class="total-price">
-                <table>
-                    <tr>
-                        <td>Total</td>
-                        <td id="totalPrice">${{ total_price }}</td>
-                    </tr>
-                    
-                    
-                </table>
-            </div>
-            <a href="{% url 'checkout' %}" class="btn">Proceed to Checkout</a>
-        {% else %}
-            <p>Your cart is empty.</p>
-        {% endif %}
-        <a href="{% url 'productsapp:product_list' %}" class="btn">Continue Shopping</a>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="footer-col-1">
-                    <h3>Download Our App</h3>
-                    <p>Download App for Android and ios mobile phone.</p>
-                    <div class="app-logo">
-                        <img src="{% static 'images/play-store.png' %}">
-                        <img src="{% static 'images/app-store.png' %}">
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        {% if item.product.images.first %}
+                            <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}">
+                        {% else %}
+                            <img src="{% static 'images/default-product.jpg' %}" alt="{{ item.product.name }}">
+                        {% endif %}
+                        <p><strong>{{ item.product.name }}</strong></p>
+                        <small>Price: ${{ item.product.price }}</small>
+                        <form method="post" action="{% url 'cartapp:remove_from_cart' item.id %}">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none; border:none; color:red; cursor:pointer;">Remove</button>
+                        </form>
+                    </div>
+                    <div class="quantity">
+                        <input type="number" class="quantity-selector" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" data-price="{{ item.product.price }}" data-item-id="{{ item.id }}">
+                    </div>
+                    <div class="subtotal" id="subtotal-{{ item.id }}">
+                        ${{ item.get_total_price }}
                     </div>
                 </div>
-                <div class="footer-col-2">
-                    <img src="{% static 'images/logo-white.png' %}">
-                    <p>Our Purpose Is To Sustainably Make the Pleasure and Benefits of Sports Accessible to the Many.</p>
-                </div>
-                <div class="footer-col-3">
-                    <h3>Useful Links</h3>
-                    <ul>
-                        <li><a href="#">Coupons</a></li>
-                        <li><a href="#">Blog Post</a></li>
-                        <li><a href="#">Return Policy</a></li>
-                        <li><a href="#">Join Affiliate</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col-4">
-                    <h3>Follow Us</h3>
-                    <ul>
-                        <li><a href="#">Facebook</a></li>
-                        <li><a href="#">Twitter</a></li>
-                        <li><a href="#">Instagram</a></li>
-                        <li><a href="#">Youtube</a></li>
-                    </ul>
-                </div>
+                {% endfor %}
             </div>
-            <hr>
-            <p class="copyright">Copyright 2020 - Samwit Adhikary</p>
-        </div>
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div>
+                    <span>Total Price</span>
+                    <span id="total-price">${{ total_price }}</span>
+                </div>
+                <a href="{% url 'checkoutapp:checkout' %}" class="btn">Proceed to Checkout</a>
+            </div>
+        {% else %}
+            <p>Your cart is empty.</p>
+            <a href="{% url 'productsapp:product_list' %}" class="btn">Continue Shopping</a>
+        {% endif %}
     </div>
-
-    <!-- JavaScript -->
+    
     <script>
-        var MenuItems = document.getElementById("MenuItems");
-        MenuItems.style.maxHeight = "0px";
-
-        function menutoggle() {
-            if (MenuItems.style.maxHeight == "0px") {
-                MenuItems.style.maxHeight = "200px";
-            } else {
-                MenuItems.style.maxHeight = "0px";
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to update the subtotal and total price
+            function updateCart() {
+                let totalPrice = 0;
+                document.querySelectorAll('.cart-item').forEach(function(item) {
+                    const quantityInput = item.querySelector('.quantity-selector');
+                    const price = parseFloat(quantityInput.getAttribute('data-price'));
+                    const quantity = parseInt(quantityInput.value);
+                    const maxQuantity = parseInt(quantityInput.getAttribute('max'));
+                    const subtotalElem = item.querySelector('.subtotal');
+    
+                    if (quantity > maxQuantity) {
+                        alert('Quantity exceeds stock limit');
+                        quantityInput.value = maxQuantity;
+                    }
+    
+                    const subtotal = price * quantity;
+                    subtotalElem.textContent = `$${subtotal.toFixed(2)}`;
+                    totalPrice += subtotal;
+                });
+                document.getElementById('total-price').textContent = `$${totalPrice.toFixed(2)}`;
             }
-        }
-
-        document.querySelectorAll('.quantity').forEach(function(input) {
-            input.addEventListener('change', function() {
-                // Ensure the value is non-negative and within valid range
-                if (this.value < 1) {
-                    this.value = 1;
-                }
-                updateCart(this);
+    
+            // Add event listeners to quantity inputs
+            document.querySelectorAll('.quantity-selector').forEach(function(input) {
+                input.addEventListener('change', updateCart);
             });
+    
+            // Initial update
+            updateCart();
         });
-
-        function updateCart(quantityInput) {
-            var row = quantityInput.closest('tr');
-            var productId = row.getAttribute('data-product-id');
-            var price = parseFloat(row.getAttribute('data-price'));
-            var quantity = Math.max(1, parseInt(quantityInput.value));
-            var quantity = parseInt(quantityInput.value);
-            var subtotal = price * quantity;
-            row.querySelector('.subtotal').textContent = '$' + subtotal.toFixed(2);
-
-            var totalPrice = 0;
-            document.querySelectorAll('.subtotal').forEach(function(subtotalElem) {
-                totalPrice += parseFloat(subtotalElem.textContent.replace('$', ''));
-            });
-
-
-            document.getElementById('totalPrice').textContent = '$' + totalPrice.toFixed(2);
-            document.getElementById('finalTotal').textContent = '$' + finalTotal.toFixed(2);
-
-            // Optional: Send an AJAX request to update the cart on the server
-        }
+        
     </script>
-</body>
-
-</html>
+    
+{% endblock %}

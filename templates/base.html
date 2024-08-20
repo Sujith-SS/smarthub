@@ -14,6 +14,14 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Toastr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+<!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+    
     <script>
         AOS.init();
       </script>
@@ -25,6 +33,8 @@
 <body >
     {% block content %}
     <style>
+        
+
         .navbar {
             background-color: transparent;
             width: 100%;
@@ -35,7 +45,28 @@
 
         .navbar.scrolled {
             background-color: #000000;
-            color: white;
+            
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+    
+
+    
+        .main-content {
+            flex: 1; /* Allows the content area to take up available space */
+        }
+    
+        .footer {
+    
+            padding: 20px;
+            width: 100%;
+            border-top: 1px solid #ddd;
         }
     </style>
     <div class="navbar">
@@ -50,10 +81,10 @@
                 <li><a href="">About</a></li>
                 <li><a href="">Contact</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'userprofile' %}">Profile</a></li>
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                    <li><a href="{% url 'users:userprofile' %}">Profile</a></li>
+                    <li><a href="{% url 'users:logout' %}">Logout</a></li>
                 {% else %}
-                    <li><a href="{% url 'account' %}">Account</a></li>
+                    <li><a href="{% url 'users:account' %}">Account</a></li>
                 {% endif %}
             </ul>
         </nav>

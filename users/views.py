@@ -27,6 +27,13 @@ from django.contrib.auth import get_user_model
 from .utils import generate_otp,send_otp_email  
 
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.shortcuts import redirect, render
+from django.urls import reverse
+
+
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -142,10 +149,10 @@ def login_view(request):
     return render(request, 'account.html', {'form': form})
 
 
-@login_required
+
 def logout_view(request):
     logout(request)
-    return redirect(reverse('login'))
+    return redirect(reverse('users:login'))
 
 
 
@@ -167,7 +174,7 @@ def password_reset_request(request):
                     fail_silently=False,
                 )
                 messages.success(request, 'OTP has been sent to your email.')
-                return redirect('password_reset_verify')
+                return redirect('users:password_reset_verify')
             except User.DoesNotExist:
                 messages.error(request, 'Email does not exist.')
     else:
@@ -184,7 +191,7 @@ def password_reset_verify(request):
             email = request.session.get('reset_email')
 
             if otp == str(session_otp):
-                return redirect('password_reset_complete')
+                return redirect('users:password_reset_complete')
             else:
                 messages.error(request, 'Invalid OTP.')
     else:
@@ -203,7 +210,7 @@ def password_reset_complete(request):
                 user.password = make_password(new_password)
                 user.save()
                 messages.success(request, 'Password has been reset successfully.')
-                return redirect('login')
+                return redirect('users:login')
             except User.DoesNotExist:
                 messages.error(request, 'User does not exist.')
     else:
@@ -220,7 +227,7 @@ def user_profile(request):
 
 
 
-@login_required
+@login_required(login_url="login")
 def user_profile(request):
     try:
         profile = request.user.profile
@@ -260,12 +267,9 @@ def update_profile(request):
     })
 
     
+    
 
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
-from django.shortcuts import redirect, render
-from django.urls import reverse
+
 
 @login_required(login_url='login')
 def change_password(request):
@@ -279,7 +283,7 @@ def change_password(request):
                 messages.success(request, "OTP has been sent to your email.")
             else:
                 messages.error(request, "Failed to send OTP. Please try again.")
-            return redirect('change_password')
+            return redirect('users:change_password')
         
         elif action == 'verify_otp':
             entered_otp = request.POST.get('otp')
@@ -287,26 +291,26 @@ def change_password(request):
             
             if entered_otp == stored_otp:
                 request.session['otp_verified'] = True
-                return redirect('change_password')
+                return redirect('users:change_password')
             else:
                 messages.error(request, "Invalid OTP.")
-                return redirect('change_password')
+                return redirect('users:change_password')
         
         elif action == 'change_password':
             if not request.session.get('otp_verified'):
                 messages.error(request, "Please verify OTP first.")
-                return redirect('change_password')
+                return redirect('users:change_password')
 
             new_password = request.POST.get("new_password")
             confirm_password = request.POST.get("confirm_password")
             
             if new_password != confirm_password:
                 messages.error(request, "New passwords do not match.")
-                return redirect('change_password')
+                return redirect('users:change_password')
             
             if len(new_password) < 8:
                 messages.error(request, "Password must be at least 8 characters long.")
-                return redirect('change_password')
+                return redirect('users:change_password')
             
             request.user.set_password(new_password)
             request.user.save()
@@ -329,6 +333,11 @@ def change_password(request):
 from .models import Address
 from .forms import AddressForm
 
+from django.db import transaction,IntegrityError
+
+
+
+
 def address_list(request):
     addresses = Address.objects.filter(user=request.user)
     can_add_address = addresses.count() < 4
@@ -336,42 +345,89 @@ def address_list(request):
     if request.method == 'POST':
         form = AddressForm(request.POST, user=request.user)
         if form.is_valid():
-            address = form.save(commit=False)
-            address.user = request.user
-            if address.is_default:
-                Address.objects.filter(user=request.user).update(is_default=False)
-            address.save()
-            return redirect('address_list')
+            try:
+                with transaction.atomic():
+                    address = form.save(commit=False)
+                    address.user = request.user
+                    if address.is_default:
+                        Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
+                    address.save()
+                return JsonResponse({'status': 'success', 'message': 'Address updated successfully!'})
+            except IntegrityError:
+                form.add_error(None, "An error occurred while saving the address. Please try again.")
     else:
         form = AddressForm(user=request.user)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
-    return render(request, 'address_list.html', {
-        'addresses': addresses,
-        'form': form,
-        'can_add_address': can_add_address
-    })
+   
 
+
+
+
+@login_required
 def address_edit(request, pk):
     address = get_object_or_404(Address, pk=pk, user=request.user)
     if request.method == 'POST':
         form = AddressForm(request.POST, instance=address, user=request.user)
         if form.is_valid():
-            form.save()
-            return redirect('address_list')
-    else:
-        form = AddressForm(instance=address, user=request.user)
-    return render(request, 'address_edit.html', {'form': form})
+            try:
+                with transaction.atomic():
+                    address = form.save(commit=False)
+                    if address.is_default:
+                        Address.objects.filter(user=request.user, is_default=True).exclude(pk=address.pk).update(is_default=False)
+                    address.save()
+                return JsonResponse({'status': 'success', 'message': 'Address updated successfully!'})
+            except IntegrityError:
+                return JsonResponse({'status': 'error', 'message': 'An error occurred while updating the address.'}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+
+@login_required
 def address_delete(request, pk):
-    address = get_object_or_404(Address, pk=pk, user=request.user)
     if request.method == 'POST':
-        address.delete()
-        return redirect('address_list')
-    return render(request, 'address_delete.html', {'address': address})
+        address = get_object_or_404(Address, pk=pk, user=request.user)
+        try:
+            address.delete()
+            return JsonResponse({'status': 'success', 'message': 'Address deleted successfully!'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+@login_required
+@require_POST
 def set_default_address(request, pk):
-    address = get_object_or_404(Address, pk=pk, user=request.user)
-    Address.objects.filter(user=request.user).update(is_default=False)
-    address.is_default = True
-    address.save()
-    return redirect('address_list')
+    try:
+        with transaction.atomic():
+            address = get_object_or_404(Address, pk=pk, user=request.user)
+            Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
+            address.is_default = True
+            address.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    
+def address_view(request):
+    addresses = Address.objects.filter(user=request.user)
+    can_add_address = addresses.count() < 4
+
+    # if request.method == 'POST':
+    #     form = AddressForm(request.POST, user=request.user)
+    #     if form.is_valid():
+    #         try:
+    #             with transaction.atomic():
+    #                 address = form.save(commit=False)
+    #                 address.user = request.user
+    #                 if address.is_default:
+    #                     Address.objects.filter(user=request.user, is_default=True).update(is_default=False)
+    #                 address.save()
+    #             return redirect('users:address_list')
+    #         except IntegrityError:
+    #             form.add_error(None, "An error occurred while saving the address. Please try again.")
+    # else:
+    form = AddressForm(user=request.user)
+    return render(request, 'address_list.html', {
+        'addresses': addresses,
+        'form': form,
+        'can_add_address': can_add_address
+    })

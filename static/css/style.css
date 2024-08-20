@@ -336,7 +336,7 @@ input:focus{
 }
 
 /* Cart Items */
-.cart-page{
+/* .cart-page{
     margin: 80px auto;
 }
 table{
@@ -385,7 +385,7 @@ td:last-child{
 }
 th:last-child{
     text-align: right;
-}
+} */
 
 /* Account page */
 .account-page{
@@ -528,6 +528,8 @@ form a{
         display: none;
     }
 }
+
+
 
 
 

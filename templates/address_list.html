@@ -64,12 +64,46 @@
             background-color: #ff6b00;
             border-color: #ff6b00;
         }
+
+
+
+
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: ">";
+        }
+        .breadcrumb-item a {
+            color: #ff6b00;
+        }
+        .breadcrumb-item.active {
+            color: #333;
+        }
     </style>
 </head>
 <body>
+
+
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'cartapp:cart_detail' %}">Cart</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'checkoutapp:checkout' %}">Checkout</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'users:user_profile' %}">Profile</a></li>
+            
+        </ol>
+    </nav>
+
     <div class="container">
         <h4 class="font-weight-bold mb-4">Manage Addresses</h4>
-        <button class="btn btn-primary mb-4" data-toggle="modal" data-target="#add-address-modal">Add Address</button>
+        {% if can_add_address %}
+            <button class="btn btn-primary mb-4" data-toggle="modal" data-target="#add-address-modal">Add Address</button>
+        {% else %}
+            <p class="alert alert-warning">You have reached the maximum number of addresses (4).</p>
+        {% endif %}
         <div class="row" id="addresses-container">
             {% for address in addresses %}
                 <div class="col-md-6">
@@ -77,36 +111,50 @@
                         <div class="custom-control custom-radio">
                             <input type="radio" id="address{{ address.id }}" name="addressRadio" class="custom-control-input" {% if address.is_default %}checked{% endif %}>
                             <label class="custom-control-label" for="address{{ address.id }}">
+                                <span class="radio-icon"></span>
+                            </label>
+                            <div class="address-content">
                                 <div class="media">
                                     <div class="mr-3"><i class="icofont-ui-home icofont-3x"></i></div>
                                     <div class="media-body">
                                         <h6 class="mb-1">{{ address.label }}</h6>
-                                        <p>{{ address.address_line1 }}, {{ address.address_line2 }}<br>{{ address.city }}, {{ address.state }} {{ address.zip_code }}</p>
+                                        <p>{{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}<br>{{ address.city }}, {{ address.state }} {{ address.zip_code }}</p>
                                         <p class="mb-0 font-weight-bold">
-                                            <a class="text-primary mr-3" data-toggle="modal" data-target="#edit-address-modal" data-address-id="{{ address.id }}"><i class="icofont-ui-edit"></i> EDIT</a>
-                                            <a class="text-danger" data-toggle="modal" data-target="#delete-address-modal" data-address-id="{{ address.id }}"><i class="icofont-ui-delete"></i> DELETE</a>
+                                            <a class="text-primary mr-3 edit-address" 
+                                               data-address-id="{{ address.id }}"
+                                               data-address-line1="{{ address.address_line1 }}"
+                                               data-address-line2="{{ address.address_line2 }}"
+                                               data-city="{{ address.city }}"
+                                               data-state="{{ address.state }}"
+                                               data-zip-code="{{ address.zip_code }}"
+                                               data-phone-number="{{ address.phone_number }}"
+                                               data-label="{{ address.label }}"
+                                               data-is-default="{{ address.is_default|yesno:'true,false' }}">
+                                                <i class="icofont-ui-edit"></i> EDIT
+                                            </a>
+                                            <a class="text-danger delete-address" data-address-id="{{ address.id }}"><i class="icofont-ui-delete"></i> DELETE</a>
                                         </p>
                                     </div>
                                 </div>
-                            </label>
+                            </div>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
 
-        <!-- Add Address Modal -->
-        <div class="modal fade" id="add-address-modal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+        <!-- Add/Edit Address Modal -->
+        <div class="modal fade" id="add-address-modal" tabindex="-1" role="dialog" aria-labelledby="addressModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="addAddressModalLabel">Add Address</h5>
+                        <h5 class="modal-title" id="addressModalLabel">Add Address</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-                        <form id="add-address-form">
+                        <form id="address-form" method="post" action="{% url 'users:address_list' %}">
                             {% csrf_token %}
                             {{ form.as_p }}
                             <button type="submit" class="btn btn-primary">Save Address</button>
@@ -115,28 +163,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Edit Address Modal -->
-        <div class="modal fade" id="edit-address-modal" tabindex="-1" role="dialog" aria-labelledby="editAddressModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="edit-address-form">
-                            {% csrf_token %}
-                            {{ form.as_p }}
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    
         <!-- Delete Address Modal -->
         <div class="modal fade" id="delete-address-modal" tabindex="-1" role="dialog" aria-labelledby="deleteAddressModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -158,53 +185,116 @@
             </div>
         </div>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script>
-        // Function to create a new address item
-        function createAddressItem(label, address, id) {
-            return `
-                <div class="col-md-6">
-                    <div class="addresses-item">
-                        <div class="custom-control custom-radio">
-                            <input type="radio" id="${id}" name="addressRadio" class="custom-control-input">
-                            <label class="custom-control-label" for="${id}">
-                                <div class="media">
-                                    <div class="mr-3"><i class="icofont-ui-home icofont-3x"></i></div>
-                                    <div class="media-body">
-                                        <h6 class="mb-1">${label}</h6>
-                                        <p>${address}</p>
-                                        <p class="mb-0 font-weight-bold">
-                                            <a class="text-primary mr-3" data-toggle="modal" data-target="#edit-address-modal" href="#"><i class="icofont-ui-edit"></i> EDIT</a>
-                                            <a class="text-danger" data-toggle="modal" data-target="#delete-address-modal" href="#"><i class="icofont-ui-delete"></i> DELETE</a>
-                                        </p>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        $(document).ready(function() {
+            // Add/Edit Address Form Submission
+            $('#address-form').on('submit', function(e) {
+                e.preventDefault();
+                $.ajax({
+                    url: $(this).attr('action'),
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        console.log(response)
+                        if (response.status==='success') {
+                            location.reload();
+                        } 
+                    },
+                    error: function(xhr) {
+                        alert('Error. Please try again.');
+                    }
+                });
+            });
+    
+            // Edit Address
+            $('.edit-address').on('click', function() {
+                var addressId = $(this).data('address-id');
+                var modal = $('#add-address-modal');
+                
+                // Set form action
+                modal.find('form').attr('action', '/users/address/' + addressId + '/edit/');
+                
+                // Populate form fields
+                modal.find('[name="address_line1"]').val($(this).data('address-line1'));
+                modal.find('[name="address_line2"]').val($(this).data('address-line2'));
+                modal.find('[name="city"]').val($(this).data('city'));
+                modal.find('[name="state"]').val($(this).data('state'));
+                modal.find('[name="zip_code"]').val($(this).data('zip-code'));
+                modal.find('[name="phone_number"]').val($(this).data('phone-number'));
+                modal.find('[name="label"]').val($(this).data('label'));
+                modal.find('[name="is_default"]').prop('checked', $(this).data('is-default'));
+                
+                // Change modal title
+                modal.find('.modal-title').text('Edit Address');
+                
+                // Show modal
+                modal.modal('show');
+            });
 
-        // Handle form submission
-        $('#add-address-form').submit(function(e) {
-            e.preventDefault();
-            const label = $('#inputLabel').val();
-            const address = $('#inputAddressLine1').val() + ', ' + $('#inputCity').val() + ', ' + $('#inputState').val() + ' ' + $('#inputZip').val();
-            const id = 'address' + ($('input[name="addressRadio"]').length + 1);
-            
-            $('#addresses-container').append(createAddressItem(label, address, id));
-            $('#add-address-modal').modal('hide');
-            this.reset();
-        });
-
-
-
-
+            // Reset modal on close
+            $('#add-address-modal').on('hidden.bs.modal', function () {
+                var modal = $(this);
+                modal.find('form').attr('action', "{% url 'users:address_list' %}");
+                modal.find('form')[0].reset();
+                modal.find('.modal-title').text('Add Address');
+            });
         
+            // Delete Address
+            $('.delete-address').on('click', function() {
+                var addressId = $(this).data('address-id');
+                $('#delete-address-modal').data('address-id', addressId).modal('show');
+            });
+        
+            // Confirm Delete Address
+            $('#confirm-delete-address').on('click', function() {
+                var addressId = $('#delete-address-modal').data('address-id');
+                $.ajax({
+                    url: '/users/address/' + addressId + '/delete/',
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert('Error deleting address: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        alert('Error deleting address. Please check the console for details.');
+                    }
+                });
+            });
+        
+           // Set Default Address
+            $('.custom-control-input').on('change', function() {
+                var addressId = $(this).attr('id').replace('address', '');
+                $.ajax({
+                    url: '/users/address/' + addressId + '/set_default/',
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            location.reload();
+                        } else {
+                            alert('Error setting default address: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        alert('Error setting default address. Please check the console for details.');
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

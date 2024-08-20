@@ -73,12 +73,13 @@
                 {% endfor %}
             </div>
             <p>₹{{ product.price }}</p>
+
             <div class="product-actions">
-                <a href="#" class="btn" onclick="addToCart({{ product.id }})">Add To Cart</a>
+                <a href="#" class="btn" onclick="addToCart({{ product.id }})" id="add-to-cart-form">Add to Cart</a>
                 <a href="#" class="wishlist" onclick="addToWishlist({{ product.id }})">
-                    <i class="fa fa-heart"></i>
-                </a>
+                    <i class="fa fa-heart"></i></a>
             </div>
+        
         </a>
         </div>
         {% empty %}
@@ -122,5 +123,74 @@ function addToWishlist(productId) {
     console.log('Adding product ' + productId + ' to wishlist');
     // You might want to make an AJAX call to your backend here
 }
+</script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('add-to-cart-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const form = this;
+            const formData = new FormData(form);
+            const url = form.action;
+            
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info', // Changed to 'info' for clarity
+                        title: 'Notice',
+                        text: data.message
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'An error occurred. Please try again.'
+                });
+            });
+        });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantity');
+        const maxQuantity = 4;
+
+        quantityInput.addEventListener('input', function() {
+            if (this.value > maxQuantity) {
+                this.value = maxQuantity;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Quantity Limit',
+                    text: `You can only add up to ${maxQuantity} items.`,
+                });
+            }
+        });
+    });
+
 </script>
 {% endblock %}

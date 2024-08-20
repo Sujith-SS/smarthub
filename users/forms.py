@@ -65,7 +65,7 @@ class SetNewPasswordForm(forms.Form):
 class AddressForm(forms.ModelForm):
     class Meta:
         model = Address
-        fields = ['address_line1', 'address_line2', 'city', 'state', 'zip_code', 'phone_number', 'label']
+        fields = ['address_line1', 'address_line2', 'city', 'state', 'zip_code', 'phone_number', 'label', 'is_default']
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -73,6 +73,10 @@ class AddressForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if Address.objects.filter(user=self.user).count() >= 4 and not self.instance.pk:
-            raise forms.ValidationError("You can only add up to 4 addresses.")
+        is_default = cleaned_data.get('is_default')
+
+        if is_default:
+            # Unset any existing default addresses for this user
+            Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
+
         return cleaned_data

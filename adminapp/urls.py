@@ -22,9 +22,13 @@ urlpatterns = [
     path('remove_product_image/<int:product_id>/<int:image_index>/', views.remove_product_image, name='remove_product_image'),
     
     
+    path('orders/', views.order_management, name='admin_order_management'),
+    path('orders/update-status/<int:order_id>/', views.update_order_status, name='admin_order_update_status'),
+    path('orders/cancel/<int:order_id>/', views.cancel_order, name='admin_order_cancel'),
+
     
-    # path('productmanagement/',views.admin_productManagement, name='productmanagement'),
-    path('ordermanagement/',views.admin_orderManagement, name='ordermanagement'),
+    
+    
     path('salesreport/',views.admin_salesRepot, name='salesreport'),
     
 ]

@@ -11,6 +11,9 @@ import logging
 from django.db import transaction
 from django.views.decorators.http import require_http_methods
 
+from django.http import HttpResponseForbidden
+from checkoutapp.models import Order, OrderStatus
+
 
 def admin_login(request):
     if request.method == 'POST':
@@ -239,7 +242,7 @@ def edit_product(request, product_id):
         product.save()
         return JsonResponse({'success': True, 'message': 'Product updated successfully.'})
     
-    # GET request - return product data including image URLs
+    # GET request  return product data including image URLs
     categories = Category.objects.filter(is_active=True)
     image_urls = [image.image.url for image in product.images.all()]
     return JsonResponse({
@@ -278,13 +281,44 @@ def product_status(request, product_id):
 
 
 
+def order_management(request):
+    orders = Order.objects.all().select_related('user', 'order_status')
+    return render(request, 'admin_ordermanagement.html', {'orders': orders})
 
-def admin_categoryManagement(request):
-    return render(request,'admin_categorymanagement.html')
+
+def update_order_status(request, order_id):
+    print(f"Request method: {request.method}")
+    print(f"POST data: {request.POST}")
+    if request.method == 'POST':
+        status_name = request.POST.get('status_name')
+        print(f"Received status_name: {status_name}")
+        if not status_name:
+            return JsonResponse({'success': False, 'error': 'No status provided'})
+        
+        order = get_object_or_404(Order, id=order_id)
+        try:
+            new_status = OrderStatus.objects.get(status=status_name)
+            order.order_status = new_status
+            order.save()
+            return JsonResponse({'success': True, 'new_status': new_status.status})
+        except OrderStatus.DoesNotExist:
+            return JsonResponse({'success': False, 'error': f"Invalid status: {status_name}"})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-def admin_orderManagement(request):
-    return render (request, 'admin_ordermanagement.html')
+
+
+
+
+def cancel_order(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, id=order_id)
+        order.order_status = OrderStatus.objects.get(status='Cancelled')  # Ensure 'Cancelled' is a valid status
+        order.save()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    
+    
 
 def admin_salesRepot(request):
     return render (request, 'sales_report.html')

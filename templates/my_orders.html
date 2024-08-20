@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block main_content %}
+
+<style>
+    /* Container for the orders, with padding adjustments to avoid overlap with navbar and footer */
+    .orders-container {
+        padding: 136px 20px; /* Increased padding to avoid overlap */
+        max-width: 88em;
+        margin: 0 auto; /* Center the container horizontally */
+    }
+
+    /* Flexbox container for the list of orders */
+    .orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* Add gap between order items */
+    }
+
+    /* Style for each order item */
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px; /* Adds gap below each order item */
+    }
+
+    /* Order information section styles */
+    .order-info h3 {
+        margin: 0 0 10px 0;
+        font-size: 18px;
+    }
+
+    .order-info p {
+        margin: 0;
+        color: #666;
+    }
+
+    /* Price section styles */
+    .order-price {
+        text-align: right;
+    }
+
+    .order-price span {
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    /* Cancel button styling */
+    .cancel-button {
+        margin-top: 10px;
+        padding: 5px 10px;
+        background: #ff4d4d;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .cancel-button:hover {
+        background: #e60000;
+    }
+
+
+
+    
+</style>
+
+<!-- Orders container -->
+<div class="orders-container" style="padding: 136px 20px; max-width: 88em; margin: 0 auto;">
+    <div class="orders-list" style="display: flex; flex-direction: column; gap: 8px;">
+        {% for order in orders %}
+        <div class="order-item" style="display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); margin-bottom: 20px;">
+            <div class="order-info">
+                <h3 style="margin: 0 0 10px 0; font-size: 18px;">Order {{ order.id }}</h3>
+                <p style="margin: 0; color: #666;">Ordered on: {{ order.created_at|date:"d/m/Y" }}</p>
+                {% if order.cancelled_at %}
+                <p style="margin: 0; color: #666;">Cancelled on: {{ order.cancelled_at|date:"d/m/Y" }}</p>
+                {% endif %}
+                <p style="margin: 0; color: {% if order.order_status.status == 'Cancelled' %}#dc3545{% elif order.order_status.status == 'Delivered' %}#28a745{% elif order.order_status.status == 'Shipped' %}#17a2b8{% else %}#007bff{% endif %};">
+                    Status: {{ order.order_status.status }}
+                </p>
+            </div>
+            <div class="order-price" style="text-align: right;">
+                <span style="font-size: 18px; font-weight: 500; color: {% if order.order_total < 1000 %}#ff4d4d{% else %}#333{% endif %};">₹{{ order.order_total }}</span>
+                {% if order.order_status.status != 'Cancelled' %}
+                <button class="cancel-button" id="cancel-button-{{ order.id }}" onclick="cancelOrder('{{ order.id }}')" style="margin-top: 10px; padding: 5px 10px; background: #ff4d4d; color: #fff; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s ease;">Cancel Order</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function cancelOrder(orderId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, cancel it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`{% url "checkoutapp:cancel_order" 0 %}`.replace('0', orderId), {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire(
+                            'Cancelled!',
+                            'Your order has been cancelled.',
+                            'success'
+                        ).then(() => {
+                            // Update the status and hide the cancel button
+                            const orderStatusElement = document.querySelector(`#order-status-${orderId}`);
+                            const cancelButtonElement = document.querySelector(`#cancel-button-${orderId}`);
+                            
+                            if (orderStatusElement) {
+                                orderStatusElement.innerText = 'Status: Cancelled';
+                            }
+                            
+                            if (cancelButtonElement) {
+                                cancelButtonElement.style.display = 'none';
+                            }
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error',
+                            data.error,
+                            'error'
+                        );
+                    }
+                })
+                .catch(error => {
+                    Swal.fire(
+                        'Error',
+                        'An error occurred. Please try again.',
+                        'error'
+                    );
+                });
+            }
+        });
+    }
+    
+    
+    
+</script>
+{% endblock %}
