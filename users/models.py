@@ -2,6 +2,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
+from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.utils import timezone
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -12,17 +15,31 @@ class Profile(models.Model):
         return self.user.username
     
     
-    
-from django.db import models
-from django.contrib.auth.models import User
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=6, null=True, blank=True)
+    otp_expires_at = models.DateTimeField(null=True, blank=True)
+
+    def is_otp_valid(self, otp_code):
+        return self.otp == otp_code and timezone.now() <= self.otp_expires_at
+    
+    
+    
 class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     address_line1 = models.CharField(max_length=255)
+    address_line2 = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100)
-    zipcode = models.CharField(max_length=20)
-    country = models.CharField(max_length=100)
-    is_active = models.BooleanField(default=False)
+    state = models.CharField(max_length=100)
+    zip_code = models.CharField(max_length=10)
+    phone_number = models.CharField(max_length=15)
+    label = models.CharField(max_length=50)
+    is_default = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'is_default')
 
     def __str__(self):
-        return f"{self.address_line1}, {self.city}, {self.country}"
+        return f"{self.label} - {self.address_line1}, {self.city}"
+

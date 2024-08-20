@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404,HttpResponse
 from django.contrib.auth import login, authenticate
 from django.utils import timezone
 from django.core.mail import send_mail, BadHeaderError
@@ -11,23 +11,20 @@ from django.contrib.auth import logout
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .utils import generate_and_send_otp
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.backends import ModelBackend 
 from django.core.mail import send_mail
 from django.conf import settings
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Profile,Address
+from .models import Profile,UserProfile
 from django.contrib.auth.hashers import check_password, make_password
-
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth import get_user_model
+from .utils import generate_otp,send_otp_email  
 
 
 
@@ -44,97 +41,65 @@ with open(template_path, 'r', encoding='utf-8') as file:
     html_template = file.read()
     
 
-
-
-
+User = get_user_model()
 
 def account_view(request):
     return render(request, 'account.html')
 
 
-def generate_otp():
-    return str(random.randint(100000, 999999))
-     
-
-def send_otp_email(email, otp):
-    html_content = html_template.replace("123456", otp)
-    subject = 'Your OTP for Verification'
-    from_email = settings.DEFAULT_FROM_EMAIL
-    recipient_list = [email]
-    
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = ", ".join(recipient_list)
-    msg['Subject'] = subject
-    msg.attach(MIMEText(html_content, 'html'))
-    
-    try:
-        send_mail(subject, '', from_email, recipient_list, html_message=html_content)
-        return True
-    except Exception as e:
-        return False
-    
-        
-
-def signup(request):
-    if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            request.session['signup_data'] = {
-                'name': form.cleaned_data.get('name'),
-                'email': form.cleaned_data.get('email'),
-                'password1': form.cleaned_data.get('password1'),
-                'password2': form.cleaned_data.get('password2'),
-            }
-            otp = generate_otp()
-            expires_at = timezone.now() + timedelta(minutes=5)
-            request.session['otp'] = otp
-            request.session['otp_expires_at'] = expires_at.isoformat()
-            
-            if send_otp_email(form.cleaned_data.get('email'), otp):
-                return redirect('verify_otp')
-            else:
-                form.add_error(None, 'Failed to send OTP email. Please try again later.')
-    else:
-        form = SignUpForm()
-        print(f"Generated OTP: {otp}")
-    return render(request, 'account.html', {'form': form})
-
-    
-
-    
-
-@csrf_exempt
 def verify_otp(request):
     if request.method == 'POST':
         form = OTPForm(request.POST)
         if form.is_valid():
             otp_code = form.cleaned_data.get('otp')
-            
-            otp = request.session.get('otp')
-            otp_expires_at = request.session.get('otp_expires_at')
-            if otp and otp_expires_at:
-                expires_at = timezone.datetime.fromisoformat(otp_expires_at)
-                if timezone.now() > expires_at:
-                    form.add_error('otp', 'OTP has expired')
-                elif otp_code == otp:
-                    signup_data = request.session.get('signup_data')
-                    if signup_data:
-                        user = User.objects.create_user(
-                            username=signup_data['email'],
-                            email=signup_data['email'],
-                            password=signup_data['password1'],
-                            first_name=signup_data['name'],
-                            is_active=True
-                        )
-                        messages.success(request, 'Signup successful! Please log in.')
-                        return redirect('account')
-                else:
-                    form.add_error('otp', 'Invalid OTP')
+            signup_data = request.session.get('signup_data')
+
+            if signup_data:
+                try:
+                    user = User.objects.get(id=signup_data['user_id'], email=signup_data['email'])
+                    try:
+                        profile = user.userprofile
+                        if profile.is_otp_valid(otp_code):
+                            user.is_active = True
+                            profile.otp = None
+                            profile.otp_expires_at = None
+                            user.save()
+                            profile.save()
+                            messages.success(request, 'Signup successful! Please log in.')
+                            return redirect('login')
+                        else:
+                            form.add_error('otp', 'Invalid or expired OTP')
+                    except UserProfile.DoesNotExist:
+                        form.add_error(None, 'User profile does not exist')
+                except User.DoesNotExist:
+                    form.add_error(None, 'User does not exist')
+            else:
+                form.add_error(None, 'Session data not found')
     else:
         form = OTPForm()
-        
+
     return render(request, 'verify_otp.html', {'form': form})
+
+
+def signup(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # Create user as inactive
+            user.save()
+            
+            # Save additional data in session for OTP verification
+            request.session['signup_data'] = {
+                'user_id': user.id,
+                'email': user.email,
+            }
+            return redirect('verify_otp')
+    else:
+        form = SignUpForm()
+    return render(request, 'signup.html', {'form': form})
+
+
 
 class EmailBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
@@ -146,43 +111,29 @@ class EmailBackend(ModelBackend):
             if user.check_password(password):
                 return user
         return None
+    
 
 def resend_otp(request):
-    
     otp = generate_otp()
-    
-    print(f"otp{otp}")
     expires_at = timezone.now() + timedelta(minutes=5)
     request.session['otp'] = otp
     request.session['otp_expires_at'] = expires_at.isoformat()
     signup_data = request.session.get('signup_data')
     if signup_data:
-        send_mail(
-            'Your New OTP Code',
-            f'Your new OTP code is {otp}',
-            'smarthubcart@gmail.com',
-            [signup_data['email']],
-            fail_silently=False,
-        )
+        send_otp_email(signup_data['email'], otp)
     return redirect('verify_otp')
 
 
 def login_view(request):
-    print("inside")
     if request.method == 'POST':
-        print("inside post")
         form = LoginForm(request=request, data=request.POST)
         if form.is_valid():
-            print("inside form")
             email = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            print("email:",email,"password:",password)
             user = authenticate(request, username=email, password=password)
             if user is not None:
-                print("here")
                 login(request, user)
                 return redirect(reverse('home') + '?message=You have been logged in successfully&action=login')
-                
             else:
                 form.add_error(None, 'Invalid email or password.')
     else:
@@ -375,54 +326,52 @@ def change_password(request):
 
 
 
-@login_required
+from .models import Address
+from .forms import AddressForm
+
 def address_list(request):
     addresses = Address.objects.filter(user=request.user)
-    return render(request, 'address_list.html', {'addresses': addresses})
+    can_add_address = addresses.count() < 4
 
-@login_required
-def address_create(request):
     if request.method == 'POST':
-        address_line1 = request.POST.get('address_line1')
-        city = request.POST.get('city')
-        zipcode = request.POST.get('zipcode')
-        country = request.POST.get('country')
+        form = AddressForm(request.POST, user=request.user)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            if address.is_default:
+                Address.objects.filter(user=request.user).update(is_default=False)
+            address.save()
+            return redirect('address_list')
+    else:
+        form = AddressForm(user=request.user)
 
-        address = Address(user=request.user, address_line1=address_line1, city=city, zipcode=zipcode, country=country)
-        address.save()
-        messages.success(request, 'Address added successfully!')
-        return JsonResponse({'message': 'Address added successfully!'}, status=200)
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+    return render(request, 'address_list.html', {
+        'addresses': addresses,
+        'form': form,
+        'can_add_address': can_add_address
+    })
 
-@login_required
-def address_update(request, pk):
+def address_edit(request, pk):
     address = get_object_or_404(Address, pk=pk, user=request.user)
     if request.method == 'POST':
-        address.address_line1 = request.POST.get('address_line1')
-        address.city = request.POST.get('city')
-        address.zipcode = request.POST.get('zipcode')
-        address.country = request.POST.get('country')
-        address.save()
-        messages.success(request, 'Address updated successfully!')
-        return JsonResponse({'message': 'Address updated successfully!'}, status=200)
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+        form = AddressForm(request.POST, instance=address, user=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('address_list')
+    else:
+        form = AddressForm(instance=address, user=request.user)
+    return render(request, 'address_edit.html', {'form': form})
 
-@login_required
 def address_delete(request, pk):
     address = get_object_or_404(Address, pk=pk, user=request.user)
     if request.method == 'POST':
         address.delete()
-        messages.success(request, 'Address deleted successfully!')
-        return JsonResponse({'message': 'Address deleted successfully!'}, status=200)
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+        return redirect('address_list')
+    return render(request, 'address_delete.html', {'address': address})
 
-
-
-@login_required
-def address_set_active(request, pk):
+def set_default_address(request, pk):
     address = get_object_or_404(Address, pk=pk, user=request.user)
-    Address.objects.filter(user=request.user).update(is_active=False)
-    address.is_active = True
+    Address.objects.filter(user=request.user).update(is_default=False)
+    address.is_default = True
     address.save()
-    messages.success(request, 'Address set as active successfully!')
-    return JsonResponse({'message': 'Address set as active successfully!'}, status=200)
+    return redirect('address_list')

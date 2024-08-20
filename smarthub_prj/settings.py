@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'adminapp',
     'homeapp',
     'productsapp',
+    'cartapp',
+    'checkoutapp',
     'users',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -53,6 +55,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'phonenumber_field',
     'rest_framework',
+   
 ]
 
 MIDDLEWARE = [

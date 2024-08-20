@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout | Smarthub{% endblock %}
+
+{% block main_content %}
+ <style>
+    /* General Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Navbar */
+.navbar {
+    background-color: transparent;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar.scrolled {
+    background-color: #000;
+    color: white;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+}
+
+.menu-icon {
+    cursor: pointer;
+}
+
+/* Address Selection */
+.address-selection {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.address-list .list-group-item {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.address-list .list-group-item .badge {
+    font-size: 0.875rem;
+}
+
+.address-list button {
+    font-size: 0.875rem;
+}
+
+/* Cart Summary */
+.cart-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.table {
+    margin: 0;
+}
+
+.table thead {
+    background-color: #e9ecef;
+}
+
+.table tfoot {
+    font-weight: bold;
+}
+
+/* Payment Option */
+.payment-option {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.payment-option .form-check {
+    margin-bottom: 10px;
+}
+
+.payment-option .form-check input {
+    margin-right: 10px;
+}
+
+.payment-option button {
+    margin-top: 10px;
+}
+
+/* Footer */
+.footer {
+    background-color: #f1f1f1;
+    padding: 30px 0;
+    border-top: 1px solid #ddd;
+}
+
+.footer .container {
+    max-width: 1200px;
+}
+
+.footer h3 {
+    margin-bottom: 15px;
+}
+
+.footer-col-1 img,
+.footer-col-2 img {
+    width: 150px;
+}
+
+.footer-col-1 .app-logo img {
+    margin-right: 10px;
+}
+
+.footer-col-3 ul,
+.footer-col-4 ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-col-3 ul li,
+.footer-col-4 ul li {
+    margin-bottom: 10px;
+}
+
+/* Modal */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.btn-outline-secondary,
+.btn-outline-danger {
+    border-radius: 5px;
+} </style> 
+
+<div class="container">
+    <h2>Checkout</h2>
+    
+    <!-- Address Selection -->
+    <div class="address-selection">
+        <h3>Select Delivery Address</h3>
+        <div class="address-list">
+            {% for address in addresses %}
+                <div class="list-group-item">
+                    <div>
+                        <p>{{ address.address_line1 }}{% if address.address_line2 %}, {{ address.address_line2 }}{% endif %}, {{ address.city }}, {{ address.state }} - {{ address.zip_code }}</p>
+                        <p>Phone: {{ address.phone_number }}</p>
+                        {% if address.is_default %}
+                            <span class="badge badge-primary">Default</span>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editAddressModal" data-address-id="{{ address.id }}">Edit</button>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAddressModal" data-address-id="{{ address.id }}">Delete</button>
+                </div>
+            {% endfor %}
+            {% if addresses|length < 4 %}
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAddressModal">Add New Address</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="cart-summary">
+        <h3>Cart Summary</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.product.price }}</td>
+                        <td>${{ item.get_total_price }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3">Total</th>
+                    <th>${{ total_price }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Payment Option -->
+    <div class="payment-option">
+        <h3>Payment Option</h3>
+        <form method="post" action="#">
+            {% csrf_token %}
+            <div class="form-check">
+                <input type="radio" id="cod" name="payment_option" value="COD" checked>
+                <label for="cod">Cash on Delivery</label>
+            </div>
+            <input type="hidden" name="address_id" value="{{ addresses.0.id }}"> <!-- Example, should dynamically select address -->
+            <button type="submit" class="btn btn-primary">Place Order</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modals for Add, Edit, Delete Address -->
+<!-- Add Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'add_address' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                   
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Address Modal -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'edit_address' %}">
+                {% csrf_token %}
+                <input type="hidden" name="address_id" id="editAddressId">
+                <div class="modal-body">
+                   
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Address Modal -->
+<div class="modal fade" id="deleteAddressModal" tabindex="-1" aria-labelledby="deleteAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAddressModalLabel">Delete Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'delete_address' %}">
+                {% csrf_token %}
+                <input type="hidden" name="address_id" id="deleteAddressId">
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this address?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Delete Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% comment %} order_history.html
+
+html
+Copy code
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Order History</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.created_at }}</td>
+                    <td>{{ order.status }}</td>
+                    <td>${{ order.total }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} {% endcomment %}

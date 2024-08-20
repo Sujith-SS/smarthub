@@ -200,7 +200,7 @@ def add_product(request):
                 if len(images) < 3:
                     error_msg = f"Not enough images. Received {len(images)}, need at least 3."
                     raise ValueError(error_msg)
-
+               
                 for image in images:
                     product_image = ProductImage.objects.create(image=image)
                     product.images.add(product_image)
