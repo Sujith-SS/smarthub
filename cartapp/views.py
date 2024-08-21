@@ -23,10 +23,8 @@ def add_to_cart(request, product_id):
         
         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
         if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
-            message = 'Product quantity updated in the cart!'
-            success = True
+            # Product already in cart, do not update quantity
+            return JsonResponse({'success': False, 'message': 'This product is already in your cart.'})
         else:
             cart_item.quantity = quantity
             cart_item.save()

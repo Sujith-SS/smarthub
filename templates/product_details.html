@@ -15,9 +15,131 @@
         transform: scale(1.2);
         cursor: zoom-in;
     }
+
     .out-of-stock {
         color: red;
         font-weight: bold;
+    }
+
+    /* Card Styling */
+    .col-4 {
+        flex: 1 1 22%;
+        max-width: 22%;
+        margin: 15px;
+        padding: 15px;
+        text-align: center;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        min-height: 400px;
+    }
+
+    .col-4 img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .col-4 h4 {
+        margin: 10px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .col-4 p {
+        color: #28a745;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .col-4 p::before {
+        margin-right: 4px;
+        color: #28a745;
+    }
+
+    .product-actions {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        background-color: #ff523b;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+        background-color: #555;
+    }
+
+    .heart-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        color: #ff0000;
+        font-size: 20px;
+        transition: color 0.3s ease;
+    }
+
+    .heart-btn:hover {
+        color: #ff4d4d;
+    }
+
+    .rating {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 5px 0;
+    }
+
+    .rating i {
+        font-size: 14px;
+        color: #ffcc00;
+        margin-right: 2px;
+    }
+
+    .col-4:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive Design */
+    @media screen and (max-width: 1200px) {
+        .col-4 {
+            flex: 1 1 30%;
+            max-width: 30%;
+        }
+    }
+
+    @media screen and (max-width: 992px) {
+        .col-4 {
+            flex: 1 1 45%;
+            max-width: 45%;
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .col-4 {
+            flex: 1 1 100%;
+            max-width: 100%;
+        }
     }
 </style>
 
@@ -63,6 +185,7 @@
         </div>
     </div>
 </div>
+
 <!-- Related Products Section -->
 <div class="small-container">
     <div class="row row-2">
@@ -76,24 +199,34 @@
         {% for related_product in related_products %}
             <div class="col-4">
                 <a href="{% url 'productsapp:product_detail' related_product.id %}" class="product-link">
-                    <img src="{{ related_product.images.first.image.url }}" alt="{{ related_product.name }}">
+                    {% if related_product.images.first %}
+                        <img src="{{ related_product.images.first.image.url }}" alt="{{ related_product.name }}">
+                    {% else %}
+                        <img src="{% static 'images/default-product.jpg' %}" alt="{{ related_product.name }}">
+                    {% endif %}
                     <h4>{{ related_product.name }}</h4>
                     <div class="rating">
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star"></i>
-                        <i class="fa fa-star-o"></i>
+                        {% for i in "12345" %}
+                            <i class="fa fa-star"></i>
+                        {% endfor %}
                     </div>
                     <p>₹{{ related_product.price }}</p>
+                    <div class="product-actions">
+                        <a href="#" class="btn" onclick="addToCart({{ related_product.id }})">Add to Cart</a>
+                        <button class="heart-btn" onclick="addToWishlist({{ related_product.id }})">
+                            <i class="fa fa-heart"></i>
+                        </button>
+                    </div>
                 </a>
             </div>
         {% endfor %}
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     var ProductImg = document.getElementById("ProductImg");
     var SmallImg = document.getElementsByClassName("small-img");
@@ -192,5 +325,6 @@
         }
     });
 </script>
+
 
 {% endblock %}

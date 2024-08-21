@@ -5,58 +5,258 @@
 
 {% block main_content %}
 <style>
-    .product-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+/* Container for Products */
+.small-container {
+    padding: 20px; /* Add padding around the container */
+    margin-top: 100px; /* Adjust this value to ensure space from navbar */
+    margin-bottom: 60px; /* Adjust this value to ensure space from footer */
+}
+
+/* Card Container */
+.row {
+    display: flex;
+    flex-wrap: wrap; /* Allows cards to wrap onto the next line */
+    margin: -15px; /* Compensates for card margins */
+}
+
+/* Heading and Filters */
+.row.row-2 {
+    margin-bottom: 40px; /* Space below the heading and filters */
+}
+
+/* Filter Dropdown */
+.filter-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.filter-dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    padding: 10px;
+}
+
+.filter-dropdown-content select {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.filter-dropdown:hover .filter-dropdown-content {
+    display: block;
+}
+
+/* Individual Card Container */
+.col-4 {
+    flex: 1 1 22%;
+    max-width: 22%;
+    margin: 15px; /* Space between cards */
+    padding: 15px;
+    text-align: center;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%; /* Ensures all cards are the same height */
+    min-height: 400px; /* Adjust as needed to ensure a minimum height */
+}
+
+/* Card Image */
+.col-4 img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px 10px 0 0;
+}
+
+/* Card Title */
+.col-4 h4 {
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Card Description */
+.col-4 p {
+    color: #28a745;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.col-4 p::before {
+    content: '₹';
+    margin-right: 4px;
+    color: #28a745; /* Green color for ₹ symbol */
+}
+
+/* Card Actions */
+.product-actions {
+    margin-top: auto; /* Pushes actions to the bottom of the card */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Add to Cart Button */
+.btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #ff523b;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #555;
+}
+
+
+/* Heart Button */
+.heart-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #ff0000; /* Red color for heart */
+    font-size: 20px;
+    transition: color 0.3s ease;
+}
+
+.heart-btn:hover {
+    color: #ff4d4d; /* Lighter red on hover */
+}
+
+/* Rating Label */
+.rating-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    margin-right: 5px;
+}
+
+/* Review Stars (Yellow Filled) */
+.rating {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.rating i {
+    font-size: 14px;
+    color: #ffcc00; /* Yellow color for stars */
+    margin-right: 2px;
+}
+
+/* Hover Effects */
+.col-4:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1200px) {
+    .col-4 {
+        flex: 1 1 30%;
+        max-width: 30%;
     }
-    
-    .product-actions .wishlist {
-        color: #ff6f61;
-        font-size: 1.5rem;
-        text-decoration: none;
+}
+
+@media screen and (max-width: 992px) {
+    .col-4 {
+        flex: 1 1 45%;
+        max-width: 45%;
     }
-    
-    .product-actions .wishlist:hover {
-        color: #ff3b3b;
+}
+
+@media screen and (max-width: 768px) {
+    .col-4 {
+        flex: 1 1 100%;
+        max-width: 100%;
     }
-    
+}
+
+/* Pagination Design */
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination .step-links a,
+.pagination .step-links .current {
+    margin: 0 5px;
+    padding: 8px 12px;
+    text-decoration: none;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    color: #555;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.pagination .step-links a:hover {
+    background-color: #ff523b;
+    color: #fff;
+}
+
+.pagination .step-links .current {
+    background-color: #ff523b;
+    color: #fff;
+    font-weight: bold;
+    border-color: #ff523b;
+}
 </style>
 
 <div class="small-container">
     <div class="row row-2">
         <h2>All Products</h2>
-        <form method="get">
-            <select name="sort_by" onchange="this.form.submit()">
-                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Default Sort</option>
-                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Sort By Price</option>
-            </select>
+        <div class="filter-dropdown">
+            <button class="btn">Filters</button>
+            <div class="filter-dropdown-content">
+                <form method="get">
+                    <select name="sort_by" onchange="this.form.submit()">
+                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Default Sort</option>
+                        <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Sort By Price</option>
+                    </select>
 
-            <select name="price_range" onchange="this.form.submit()">
-                <option value="">All Prices</option>
-                <option value="0-1000" {% if price_range == '0-1000' %}selected{% endif %}>₹0 - ₹1000</option>
-                <option value="1000-2000" {% if price_range == '1000-2000' %}selected{% endif %}>₹1000 - ₹2000</option>
-                <option value="2000-5000" {% if price_range == '2000-5000' %}selected{% endif %}>₹2000 - ₹5000</option>
-                <option value="5000-10000" {% if price_range == '5000-10000' %}selected{% endif %}>₹5000 - ₹10000</option>
-                <option value="10000-above" {% if price_range == '10000-above' %}selected{% endif %}>₹10000 and above</option>
-            </select>
-            
-            <select name="category" onchange="this.form.submit()">
-                <option value="">All Categories</option>
-                {% for category in categories %}
-                    <option value="{{ category.name }}" {% if selected_category == category.name %}selected{% endif %}>
-                        {{ category.name }}
-                    </option>
-                {% endfor %}
-            </select>
-            
-        </form>
-        
+                    <select name="price_range" onchange="this.form.submit()">
+                        <option value="">All Prices</option>
+                        <option value="0-1000" {% if price_range == '0-1000' %}selected{% endif %}>₹0 - ₹1000</option>
+                        <option value="1000-2000" {% if price_range == '1000-2000' %}selected{% endif %}>₹1000 - ₹2000</option>
+                        <option value="2000-5000" {% if price_range == '2000-5000' %}selected{% endif %}>₹2000 - ₹5000</option>
+                        <option value="5000-10000" {% if price_range == '5000-10000' %}selected{% endif %}>₹5000 - ₹10000</option>
+                        <option value="10000-above" {% if price_range == '10000-above' %}selected{% endif %}>₹10000 and above</option>
+                    </select>
+                    
+                    <select name="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.name }}" {% if selected_category == category.name %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
     </div>
+
     <div class="row">
         {% for product in page_obj %}
         <a href="{% url 'productsapp:product_detail' product.id %}" class="product-link">
-        <div class="col-4"data-aos="flip-left" data-aos-easing="ease-out-cubic" data-aos-duration="2000">
+        <div class="col-4" data-aos="flip-left" data-aos-easing="ease-out-cubic" data-aos-duration="2000">
             {% if product.images.first %}
                 <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
             {% else %}
@@ -64,44 +264,45 @@
             {% endif %}
             <h4>{{ product.name }}</h4>
             <div class="rating">
+                <span class="rating-label">Rating:</span>
                 {% for i in "12345" %}
-                    {% if forloop.counter <= product.rating|default:0 %}
-                        <i class="fa fa-star"></i>
-                    {% else %}
-                        <i class="fa fa-star-o"></i>
-                    {% endif %}
+                    <i class="fa fa-star"></i>
                 {% endfor %}
             </div>
-            <p>₹{{ product.price }}</p>
+            <p>Price : {{ product.price }}</p>
 
             <div class="product-actions">
-                <a href="#" class="btn" onclick="addToCart({{ product.id }})" id="add-to-cart-form">Add to Cart</a>
-                <a href="#" class="wishlist" onclick="addToWishlist({{ product.id }})">
-                    <i class="fa fa-heart"></i></a>
+                <a href="#" class="btn" onclick="addToCart({{ product.id }})">Add to Cart</a>
+                <button class="heart-btn" onclick="addToWishlist({{ product.id }})">
+                    <i class="fa fa-heart"></i>
+                </button>
             </div>
-        
-        </a>
         </div>
-        {% empty %}
-        <p>No products available.</p>
+        </a>
         {% endfor %}
     </div>
+
+    <!-- Pagination -->
     <div class="pagination">
-        <span class="step-links">
+        <div class="step-links">
             {% if page_obj.has_previous %}
-                <a href="?page=1&sort_by={{ sort_by }}&category={{ selected_category }}">&laquo; first</a>
-                <a href="?page={{ page_obj.previous_page_number }}&sort_by={{ sort_by }}&category={{ selected_category }}">previous</a>
+                <a href="?page=1{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.price_range %}&price_range={{ request.GET.price_range }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.price_range %}&price_range={{ request.GET.price_range }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Previous</a>
             {% endif %}
 
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span>
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="current">{{ num }}</span>
+                {% else %}
+                    <a href="?page={{ num }}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.price_range %}&price_range={{ request.GET.price_range }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
 
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}&sort_by={{ sort_by }}&category={{ selected_category }}">next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}&sort_by={{ sort_by }}&category={{ selected_category }}">last &raquo;</a>
+                <a href="?page={{ page_obj.next_page_number }}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.price_range %}&price_range={{ request.GET.price_range }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.price_range %}&price_range={{ request.GET.price_range }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">Last</a>
             {% endif %}
-        </span>
+        </div>
     </div>
 </div>
 

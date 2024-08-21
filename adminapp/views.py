@@ -150,7 +150,6 @@ def list_products(request):
 
 # Add product
 
-logger = logging.getLogger(__name__)
 
 @staff_member_required(login_url='admin_login')
 def add_product(request):
@@ -186,7 +185,7 @@ def add_product(request):
                 try:
                     category = Category.objects.get(id=category_id, is_active=True)
                 except Category.DoesNotExist:
-                    error_msg = f"Category with id {category_id} does not exist or is not active"
+                    error_msg = f"Category with id {category_id} does not exist or is not active."
                     return JsonResponse({'success': False, 'error': error_msg})
 
                 # Create product
@@ -200,13 +199,17 @@ def add_product(request):
 
                 # Validate and add images
                 images = request.FILES.getlist('images')
+
                 if len(images) < 3:
                     error_msg = f"Not enough images. Received {len(images)}, need at least 3."
-                    raise ValueError(error_msg)
-               
+                    return JsonResponse({'success': False, 'error': error_msg})
+
+                product_images = []
                 for image in images:
                     product_image = ProductImage.objects.create(image=image)
-                    product.images.add(product_image)
+                    product_images.append(product_image)
+
+                product.images.set(product_images)
 
                 return JsonResponse({'success': True, 'message': 'Product added successfully.'})
 
