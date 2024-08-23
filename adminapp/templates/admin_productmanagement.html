@@ -134,6 +134,7 @@
 </div>
 
 
+
 <!-- Edit Product Modal -->
 <div id="editProductModal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
     <div class="relative top-20 mx-auto p-5 border w-3/4 max-w-4xl shadow-lg rounded-md bg-white">
@@ -155,6 +156,10 @@
                         <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-price" type="number" step="0.01" name="price" required>
                     </div>
                     <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stock">Stock</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-stock" type="number" name="stock" required>
+                    </div>
+                    <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-category">Category</label>
                         <select class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-category" name="category" required>
                             <option value="">Select a category</option>
@@ -162,19 +167,15 @@
                                 <option value="{{ category.id }}">{{ category.name }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2" for="edit-stock">Stock</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="edit-stock" type="number" name="stock" required>
+                        
                     </div>
                 </div>
                 <div>
                     <div id="edit-image-preview" class="mb-4"></div>
                     <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2" for="new-image">New Images</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="new-image" type="file" name="new_images" accept="image/*" multiple>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="new-image" type="file" name="new_images[]" accept="image/*" multiple>
                         <div id="new-image-preview" class="mt-2"></div>
-                        <p class="text-gray-500 mt-2">You can upload new images. Existing images will be shown below.</p>
                     </div>
                 </div>
             </div>
@@ -189,7 +190,21 @@
         </form>
     </div>
 </div>
+
+
+<!-- Crop Modal -->
+<div id="cropModal" class="hidden">
+    <div class="modal-content">
+        <img id="cropImage" src="" alt="Crop Image">
+        <button id="cropButton">Crop</button>
+        <button onclick="closeCropModal()">Cancel</button>
+    </div>
+</div>
+
  
+
+
+
 
 
     <!-- Crop Modal -->
@@ -211,6 +226,10 @@
 
 
 //Edit Product
+let cropper;
+let existingFiles = []; // To store newly added images
+let removedImageIndices = []; // To store indices of removed images
+
 function openEditModal(productId) {
     fetch(`/edit_product/${productId}/`)
         .then(response => response.json())
@@ -226,27 +245,29 @@ function openEditModal(productId) {
             const imageContainer = document.getElementById('edit-image-preview');
             imageContainer.innerHTML = ''; // Clear existing previews
             product.image_urls.forEach((imageUrl, index) => {
-                const imgWrapper = document.createElement('div');
-                imgWrapper.classList.add('relative', 'inline-block', 'mr-2', 'mb-2');
+                const preview = document.createElement('div');
+                preview.classList.add('mb-4', 'w-1/3', 'inline-block', 'p-2', 'border', 'rounded', 'relative', 'img-wrapper');
 
                 const img = document.createElement('img');
                 img.src = imageUrl;
-                img.classList.add('w-32', 'h-32', 'object-cover', 'cursor-pointer');
+                img.classList.add('w-full', 'h-auto', 'object-contain', 'cursor-pointer');
                 img.alt = `Image ${index + 1}`;
 
-                const removeBtn = document.createElement('button');
-                removeBtn.innerHTML = '&times;';
-                removeBtn.classList.add('absolute', 'top-0', 'right-0', 'bg-red-500', 'text-white', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center');
-                removeBtn.onclick = () => removeImage(index, productId);
+                const removeBtn = document.createElement('span');
+                removeBtn.classList.add('remove-btn');
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => {
+                    removeExistingImage(index, productId);
+                };
 
-                imgWrapper.appendChild(img);
-                imgWrapper.appendChild(removeBtn);
-                imageContainer.appendChild(imgWrapper);
+                preview.appendChild(img);
+                preview.appendChild(removeBtn);
+                imageContainer.appendChild(preview);
             });
 
-            // New images preview
+            // Handle new images
             const newImageInput = document.getElementById('new-image');
-            newImageInput.onchange = () => previewNewImages(newImageInput.files);
+            newImageInput.onchange = handleImageUpload;
 
             document.getElementById('editProductForm').onsubmit = function(e) {
                 e.preventDefault();
@@ -255,38 +276,150 @@ function openEditModal(productId) {
 
             openModal('editProductModal');
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please check the console and try again.');
+        });
 }
 
-function previewNewImages(files) {
+function handleImageUpload(event) {
+    const newFiles = Array.from(event.target.files);
+    existingFiles = existingFiles.concat(newFiles);
+
+    // Display previews of new images
     const newImageContainer = document.getElementById('new-image-preview');
     newImageContainer.innerHTML = ''; // Clear existing previews
-    Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const imgWrapper = document.createElement('div');
-            imgWrapper.classList.add('relative', 'inline-block', 'mr-2', 'mb-2');
+    existingFiles.forEach((file, index) => {
+        const preview = document.createElement('div');
+        preview.classList.add('mb-4', 'w-1/3', 'inline-block', 'p-2', 'border', 'rounded', 'relative', 'img-wrapper');
 
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.classList.add('w-32', 'h-32', 'object-cover');
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.classList.add('w-full', 'h-auto', 'object-contain', 'cursor-pointer');
+        img.onclick = () => openCropModal(img, file);
 
-            imgWrapper.appendChild(img);
-            newImageContainer.appendChild(imgWrapper);
+        const removeBtn = document.createElement('span');
+        removeBtn.classList.add('remove-btn');
+        removeBtn.textContent = '×';
+        removeBtn.onclick = () => {
+            removeNewImage(index);
         };
-        reader.readAsDataURL(file);
+
+        preview.appendChild(img);
+        preview.appendChild(removeBtn);
+        newImageContainer.appendChild(preview);
     });
+}
+
+function openCropModal(imageElement, file) {
+    const cropModal = document.getElementById('cropModal');
+    const cropImage = document.getElementById('cropImage');
+    cropImage.src = imageElement.src;
+    cropModal.classList.remove('hidden');
+
+    if (cropper) {
+        cropper.destroy();
+    }
+
+    cropper = new Cropper(cropImage, {
+        aspectRatio: 1,
+        viewMode: 1,
+        autoCropArea: 1,
+    });
+
+    const cropButton = document.getElementById('cropButton');
+    cropButton.onclick = () => {
+        const croppedCanvas = cropper.getCroppedCanvas({
+            width: 500,
+            height: 500,
+        });
+        const croppedImageUrl = croppedCanvas.toDataURL('image/jpeg');
+
+        imageElement.src = croppedImageUrl;
+
+        croppedCanvas.toBlob((blob) => {
+            const croppedFile = new File([blob], `cropped_${file.name}`, { type: 'image/jpeg' });
+            replaceFile(file, croppedFile);
+        });
+
+        closeCropModal();
+    };
+}
+
+function replaceFile(originalFile, newFile) {
+    existingFiles = existingFiles.map(file => (file === originalFile ? newFile : file));
+    updateFileInput(existingFiles);
+}
+
+function updateFileInput(files) {
+    const newImageInput = document.getElementById('new-image');
+    const dataTransfer = new DataTransfer();
+
+    files.forEach(file => {
+        dataTransfer.items.add(file);
+    });
+
+    newImageInput.files = dataTransfer.files;
+}
+
+function removeNewImage(index) {
+    existingFiles.splice(index, 1);
+    updateFileInput(existingFiles);
+    handleImageUpload({ target: { files: existingFiles } }); // Re-render the previews
+}
+
+function removeExistingImage(index, productId) {
+    removedImageIndices.push(index); // Track removed images
+
+    const imageContainer = document.getElementById('edit-image-preview');
+    imageContainer.children[index].remove();
+}
+
+function getCsrfToken() {
+    return getCookie('csrftoken');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+        }
+    }
+    return cookieValue;
 }
 
 function submitEditForm(productId) {
     const form = document.getElementById('editProductForm');
     const formData = new FormData(form);
 
+    // Perform data validation checks
+    const name = document.getElementById('edit-name').value.trim();
+    const description = document.getElementById('edit-description').value.trim();
+    const price = parseFloat(document.getElementById('edit-price').value);
+    const stock = parseInt(document.getElementById('edit-stock').value);
+
+    if (!name || !description || isNaN(price) || isNaN(stock)) {
+        alert('Please fill out all the required fields correctly.');
+        return;
+    }
+
+    existingFiles.forEach(file => {
+        formData.append('new_images[]', file);
+    });
+
+    removedImageIndices.forEach(index => {
+        formData.append('removed_images[]', index);
+    });
+
     fetch(`/edit_product/${productId}/`, {
-        method: 'PATCH',
+        method: 'PUT',
         body: formData,
         headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
+            'X-CSRFToken': getCsrfToken(),
         },
     })
     .then(response => response.json())
@@ -295,6 +428,7 @@ function submitEditForm(productId) {
             alert('Product updated successfully');
             window.location.reload();
         } else {
+            console.error('Error updating product:', data.error);
             alert('Error: ' + data.error);
         }
     })
@@ -304,43 +438,15 @@ function submitEditForm(productId) {
     });
 }
 
-function removeImage(index, productId) {
-    fetch(`/remove_product_image/${productId}/${index}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Remove the image from the UI
-            const imageContainer = document.getElementById('edit-image-preview');
-            imageContainer.children[index].remove();
-        } else {
-            alert('Failed to remove image: ' + data.error);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
+function closeCropModal() {
+    const cropModal = document.getElementById('cropModal');
+    cropModal.classList.add('hidden');
 
-// Helper function to get CSRF token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
     }
-    return cookieValue;
 }
-
-
 
 
 

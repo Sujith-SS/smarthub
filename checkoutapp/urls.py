@@ -11,4 +11,8 @@ urlpatterns = [
     
     path('my-orders/', views.my_orders, name='my_orders'),
     path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('razorpay-webhook/', views.razorpay_webhook, name='razorpay_webhook'),
+    path('verify-payment/', views.verify_payment, name='verify_payment'),
+    
+
 ]

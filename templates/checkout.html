@@ -130,6 +130,41 @@
         margin-top: 16px;
     }
 
+
+    .radio-group {
+        display: grid;
+        gap: 16px;
+        margin-top: 16px;
+    }
+    
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .radio-item input[type="radio"] {
+        accent-color: #ff4d4f;
+        cursor: pointer;
+    }
+    
+    #order-button {
+        width: 100%;
+        padding: 12px;
+        background-color: #ff4d4f;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+    
+    #order-button:hover {
+        background-color: #e04344;
+    }
+    
+
     
 
 </style>
@@ -197,21 +232,30 @@
             </div>
         </div>
 
-        <!-- Payment Section -->
-        <div class="space-y-8">
-            <div>
-                <h2>Payment</h2>
-                <div class="bg-muted p-6 rounded-lg">
-                    <div class="radio-group">
-                        {% for method in payment_methods %}
-                        <label class="radio-item">
-                            <input type="radio" name="payment_method" value="{{ method.payment_type }}" {% if forloop.first %}checked{% endif %}>
-                            <span>{{ method.display_name }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+       
+       <!-- Payment Section -->
+<form id="checkout-form" method="POST" action="{% url 'checkoutapp:place_order' %}">
+    <div class="bg-muted p-6 rounded-lg">
+        <h2>Payment Method</h2>
+        <div class="radio-group mt-4">
+            <label class="radio-item">
+                <input type="radio" name="payment_method" value="razorpay" id="razorpay-radio">
+                Pay with Razorpay
+            </label>
+            <label class="radio-item">
+                <input type="radio" name="payment_method" value="cod" id="cod-radio">
+                Cash on Delivery
+            </label>
+        </div>
+    </div>
+    <div class="bg-muted p-6 rounded-lg mt-8">
+        <button type="submit" id="order-button" class="button w-full">Place Order</button>
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    </div>
+</form>
+
+        
+        
 
          
             <!-- Order Total Section -->
@@ -245,11 +289,7 @@
                 </div>
             </div>
 
-            <form id="checkout-form" method="POST" action="{% url 'checkoutapp:place_order' %}">
-                {% csrf_token %}
-                <input type="hidden" name="address" id="selected-address">
-                <button type="submit" id="order-button" class="button w-full">Place Order</button>
-            </form>
+              
         </div>
     </div>
 </div>
@@ -258,17 +298,131 @@
 
 
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% comment %} <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkout-form');
+    const orderButton = document.getElementById('order-button');
+    const addressInputs = document.querySelectorAll('input[name="address"]');
+    
+    orderButton.addEventListener('click', function(e) {
+        e.preventDefault();
+    
+        const selectedAddress = document.querySelector('input[name="address"]:checked');
+        if (!selectedAddress) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Please select an address.',
+                icon: 'error'
+            });
+            return;
+        }
+    
+        Swal.fire({
+            title: 'Confirm Order',
+            text: 'Are you sure you want to place this order?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, place order',
+            cancelButtonText: 'No, cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const formData = new FormData(form);
+                formData.append('address', selectedAddress.value);
+    
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+                fetch('{% url "checkoutapp:place_order" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.razorpay_order_id) {
+                            var options = {
+                                "key": data.razorpay_key_id,
+                                "amount": "{{ total_amount_paise }}", // amount in paise
+                                "currency": "INR",
+                                "name": "Your Company Name",
+                                "description": "Test Transaction",
+                                "order_id": data.razorpay_order_id,
+                                "handler": function (response){
+                                    fetch('{% url "checkoutapp:verify_payment" %}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': csrftoken
+                                        },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            window.location.href = "{% url 'checkoutapp:order_success' 0 %}".replace('0', data.order_id);
+                                        } else {
+                                            Swal.fire({
+                                                title: 'Error',
+                                                text: data.error || 'An error occurred. Please try again.',
+                                                icon: 'error'
+                                            });
+                                        }
+                                    });
+                                },
+                                "prefill": {
+                                    "name": "Customer Name",
+                                    "email": "customer@example.com",
+                                    "contact": "9999999999"
+                                },
+                                "theme": {
+                                    "color": "#3399cc"
+                                }
+                            };
+                            var rzp1 = new Razorpay(options);
+                            rzp1.open();
+                        } else {
+                            window.location.href = "{% url 'checkoutapp:order_success' 0 %}".replace('0', data.order_id);
+                        }
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.error || 'An error occurred. Please try again.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
+    });
+});
+</script> {% endcomment %}
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('checkout-form');
         const orderButton = document.getElementById('order-button');
-        const addressInputs = document.querySelectorAll('input[name="address"]');
-    
+        
         orderButton.addEventListener('click', function(e) {
             e.preventDefault();
-    
-            // Get the selected address
+        
             const selectedAddress = document.querySelector('input[name="address"]:checked');
             if (!selectedAddress) {
                 Swal.fire({
@@ -278,8 +432,7 @@
                 });
                 return;
             }
-    
-            // Ask for confirmation
+        
             Swal.fire({
                 title: 'Confirm Order',
                 text: 'Are you sure you want to place this order?',
@@ -289,14 +442,11 @@
                 cancelButtonText: 'No, cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Collect form data
                     const formData = new FormData(form);
                     formData.append('address', selectedAddress.value);
-    
-                    // Get the CSRF token
+        
                     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-                    // Send AJAX request
+        
                     fetch('{% url "checkoutapp:place_order" %}', {
                         method: 'POST',
                         body: formData,
@@ -307,9 +457,54 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Redirect to order success page
-                        
-                            window.location.href = "{% url 'checkoutapp:order_success' 0 %}".replace('0', data.order_id);
+                            if (data.razorpay_order_id) {
+                                var options = {
+                                    "key": data.razorpay_key_id,
+                                    "amount": data.amount, // amount in paise
+                                    "currency": "INR",
+                                    "name": "Your Company Name",
+                                    "description": "Test Transaction",
+                                    "order_id": data.razorpay_order_id,
+                                    "handler": function (response){
+                                        fetch('{% url "checkoutapp:verify_payment" %}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRFToken': csrftoken
+                                            },
+                                            body: JSON.stringify({
+                                                razorpay_order_id: response.razorpay_order_id,
+                                                razorpay_payment_id: response.razorpay_payment_id,
+                                                razorpay_signature: response.razorpay_signature
+                                            })
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.success) {
+                                                window.location.href = "{% url 'checkoutapp:order_success' 0 %}".replace('0', data.order_id);
+                                            } else {
+                                                Swal.fire({
+                                                    title: 'Error',
+                                                    text: data.error || 'An error occurred. Please try again.',
+                                                    icon: 'error'
+                                                });
+                                            }
+                                        });
+                                    },
+                                    "prefill": {
+                                        "name": "Customer Name",
+                                        "email": "customer@example.com",
+                                        "contact": "9999999999"
+                                    },
+                                    "theme": {
+                                        "color": "#3399cc"
+                                    }
+                                };
+                                var rzp1 = new Razorpay(options);
+                                rzp1.open();
+                            } else {
+                                window.location.href = "{% url 'checkoutapp:order_success' 0 %}".replace('0', data.order_id);
+                            }
                         } else {
                             Swal.fire({
                                 title: 'Error',
@@ -331,4 +526,12 @@
         });
     });
     </script>
+    
+
+
+
+
+
+
+
 {% endblock %}

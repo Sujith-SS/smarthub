@@ -205,6 +205,16 @@ SOCIALACCOUNT_ADAPTER = 'users.adapters.MySocialAccountAdapter'
 PHONENUMBER_DEFAULT_REGION = "IN"
 
 
+from decimal import Decimal
+
+# payment
+SHIPPING_CHARGE = Decimal('40.00')
+
+
+RAZORPAY_KEY_ID='rzp_test_wHaVuoB2VyavEU'
+RAZORPAY_SECRET_KEY='CqFzfujZBSEb5j9BrgDhU3zi'
+
+
 
 
 

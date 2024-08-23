@@ -223,29 +223,41 @@ def add_product(request):
 
 # Edit product
 
-@require_http_methods(["GET", "PATCH"])
+@require_http_methods(["GET", "PUT"])
 def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
-    if request.method == 'PATCH':
+    if request.method == 'PUT':
+        # Update product details
         product.name = request.POST.get('name', product.name)
         product.description = request.POST.get('description', product.description)
         product.price = request.POST.get('price', product.price)
         product.stock = request.POST.get('stock', product.stock)
+        
+        # Update category if provided
         category_id = request.POST.get('category')
         if category_id:
             product.category = get_object_or_404(Category, id=category_id, is_active=True)
         
-        images = request.FILES.getlist('images')
+        # Handle images
+        images = request.FILES.getlist('new_images[]')
         if images:
             for image in images:
                 product_image = ProductImage.objects.create(image=image)
                 product.images.add(product_image)
         
+        # Handle removed images
+        removed_images = request.POST.getlist('removed_images[]')
+        if removed_images:
+            for index in removed_images:
+                image = product.images.all()[int(index)]
+                product.images.remove(image)
+                image.delete()
+        
         product.save()
         return JsonResponse({'success': True, 'message': 'Product updated successfully.'})
     
-    # GET request  return product data including image URLs
+    # Handle GET request to return product data
     categories = Category.objects.filter(is_active=True)
     image_urls = [image.image.url for image in product.images.all()]
     return JsonResponse({
@@ -260,7 +272,7 @@ def edit_product(request, product_id):
         },
         'categories': list(categories.values('id', 'name'))
     })
-
+    
 @require_http_methods(["POST"])
 def remove_product_image(request, product_id, image_index):
     product = get_object_or_404(Product, id=product_id)

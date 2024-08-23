@@ -45,6 +45,8 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    payment_attempts = models.IntegerField(default=0)
 
     def __str__(self):
         return f"Order {self.id} for {self.user.username}"
@@ -85,7 +87,7 @@ class OrderItem(models.Model):
 class PaymentMethod(models.Model):
     PAYMENT_CHOICES = [
         ('cod', 'Cash on Delivery'),
-        ('stripe', 'Stripe'),
+        ('razorpay', 'razorpay'),
         ('wallet', 'Wallet'),
     ]
 
